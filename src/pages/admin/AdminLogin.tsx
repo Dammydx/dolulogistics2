@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Lock, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { Link } from 'react-router-dom';
 
 const ADMIN_PASSWORD = 'Dammy@$$2002$$';
 
@@ -94,9 +95,13 @@ const AdminLogin = () => {
           </form>
           
           <div className="mt-6 text-center">
-            <a href="https://dammydx.github.io/DoluLogistics" className="text-sm text-primary-500 hover:text-primary-600 transition-colors">
-              Back to Homepage
-            </a>
+              <Link
+                to="/"
+                className="text-sm text-primary-500 hover:text-primary-600 transition-colors"
+              >
+                Back to Homepage
+              </Link>
+
           </div>
         </div>
       </motion.div>
