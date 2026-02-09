@@ -10,15 +10,13 @@ import AdminLayout from './components/layout/AdminLayout';
 
 // Pages
 import HomePage from './pages/home/HomePage';
-import TrackPage from './pages/track/TrackPage';
+import NewTrackPage from './pages/track/NewTrackPage';
 import ServicesPage from './pages/services/ServicesPage';
 import AboutPage from './pages/about/AboutPage';
 import ContactPage from './pages/contact/ContactPage';
-import RequestPickupPage from './pages/request/RequestPickupPage';
+import GetQuotePage from './pages/quote/GetQuotePage';
+import NewRequestPickupPage from './pages/request/NewRequestPickupPage';
 import AdminLogin from './pages/admin/AdminLogin';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminMessages from './pages/admin/AdminMessages';
-import AdminRequests from './pages/admin/AdminRequests';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
@@ -29,8 +27,9 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />
-          <Route path="track" element={<TrackPage />} />
-          <Route path="request-pickup" element={<RequestPickupPage />} />
+          <Route path="track" element={<NewTrackPage />} />
+          <Route path="get-quote" element={<GetQuotePage />} />
+          <Route path="request-pickup" element={<NewRequestPickupPage />} />
           <Route path="services" element={<ServicesPage />} />
           <Route path="about" element={<AboutPage />} />
           <Route path="contact" element={<ContactPage />} />
@@ -38,11 +37,7 @@ function App() {
         </Route>
 
         <Route path="/admin" element={<AdminLogin />} />
-        <Route path="/admin/dashboard" element={<AdminLayout />}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="messages" element={<AdminMessages />} />
-          <Route path="requests" element={<AdminRequests />} />
-        </Route>
+        {/* Admin dashboard routes will be added after admin rebuild */}
       </Routes>
     </Router>
   );

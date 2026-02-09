@@ -8,6 +8,9 @@ const ContactPage = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
+    whatsapp: '',
+    subject: '',
     message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,27 +23,30 @@ const ContactPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.email || !formData.message) {
-      toast.error('Please fill out all fields');
+    if (!formData.name || !formData.message) {
+      toast.error('Please provide your name and message');
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from('messages').insert([
+      const { error } = await supabase.from('contact_messages').insert([
         {
           name: formData.name,
-          email: formData.email,
+          email: formData.email || null,
+          phone: formData.phone || null,
+          whatsapp: formData.whatsapp || null,
+          subject: formData.subject || null,
           message: formData.message,
-          read: false,
+          status: 'new',
         },
       ]);
 
       if (error) throw error;
 
       toast.success("Thanks for reaching out. We'll respond shortly.");
-      setFormData({ name: '', email: '', message: '' });
+      setFormData({ name: '', email: '', phone: '', whatsapp: '', subject: '', message: '' });
     } catch (error) {
       console.error('Error submitting message:', error);
       toast.error('Something went wrong. Please try again later.');
@@ -197,7 +203,7 @@ const ContactPage = () => {
 
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                    Your Email
+                    Your Email (Optional)
                   </label>
                   <input
                     type="email"
@@ -206,7 +212,51 @@ const ContactPage = () => {
                     value={formData.email}
                     onChange={handleChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-400"
-                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number (Optional)
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-400"
+                    placeholder="+234 XXX XXX XXXX"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="whatsapp" className="block text-sm font-medium text-gray-700 mb-1">
+                    WhatsApp Number (Optional)
+                  </label>
+                  <input
+                    type="tel"
+                    id="whatsapp"
+                    name="whatsapp"
+                    value={formData.whatsapp}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-400"
+                    placeholder="+234 XXX XXX XXXX"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
+                    Subject (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    id="subject"
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-400"
+                    placeholder="Brief subject of your message"
                   />
                 </div>
 

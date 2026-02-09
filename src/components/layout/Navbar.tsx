@@ -10,6 +10,7 @@ import doluLogo from '../../assets/images/dolu-logo.png';
 const navItems = [
   { title: 'Home', path: '/' },
   { title: 'Track', path: '/track' },
+  { title: 'Get Quote', path: '/get-quote' },
   { title: 'Request Pickup', path: '/request-pickup' },
   { title: 'Services', path: '/services' },
   { title: 'About', path: '/about' },
