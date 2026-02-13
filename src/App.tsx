@@ -17,6 +17,12 @@ import ContactPage from './pages/contact/ContactPage';
 import GetQuotePage from './pages/quote/GetQuotePage';
 import NewRequestPickupPage from './pages/request/NewRequestPickupPage';
 import AdminLogin from './pages/admin/AdminLogin';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminBookings from './pages/admin/AdminBookings';
+import AdminMessages from './pages/admin/AdminMessages';
+import AdminPricing from './pages/admin/AdminPricing';
+import AdminTemplates from './pages/admin/AdminTemplates';
+import AdminSettings from './pages/admin/AdminSettings';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
@@ -36,8 +42,18 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
+        {/* Admin Routes */}
         <Route path="/admin" element={<AdminLogin />} />
-        {/* Admin dashboard routes will be added after admin rebuild */}
+        
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="bookings" element={<AdminBookings />} />
+          <Route path="bookings/:id" element={<AdminBookings />} />
+          <Route path="messages" element={<AdminMessages />} />
+          <Route path="pricing" element={<AdminPricing />} />
+          <Route path="templates" element={<AdminTemplates />} />
+          <Route path="settings" element={<AdminSettings />} />
+        </Route>
       </Routes>
     </Router>
   );

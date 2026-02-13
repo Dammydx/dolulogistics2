@@ -1,13 +1,16 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import {
-  Clipboard,
-  Package,
+  BarChart3,
+  Truck,
   MessageCircle,
   Menu,
   X,
   LogOut,
+  DollarSign,
   FileText,
+  Settings as SettingsIcon,
+  Package,
 } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -34,6 +37,39 @@ const AdminLayout = () => {
 
   if (!isAuthenticated) return null;
 
+  const navItems = [
+    {
+      to: '/admin/dashboard',
+      icon: BarChart3,
+      label: 'Dashboard',
+    },
+    {
+      to: '/admin/bookings',
+      icon: Truck,
+      label: 'Dispatch Desk',
+    },
+    {
+      to: '/admin/messages',
+      icon: MessageCircle,
+      label: 'Contact Messages',
+    },
+    {
+      to: '/admin/pricing',
+      icon: DollarSign,
+      label: 'Pricing',
+    },
+    {
+      to: '/admin/templates',
+      icon: FileText,
+      label: 'Templates',
+    },
+    {
+      to: '/admin/settings',
+      icon: SettingsIcon,
+      label: 'Settings',
+    },
+  ];
+
   return (
     <div className="flex h-screen bg-blue-50">
       {/* Sidebar */}
@@ -54,23 +90,7 @@ const AdminLayout = () => {
             </div>
 
             <nav className="mt-6">
-              {[
-                {
-                  to: '/admin/dashboard',
-                  icon: Clipboard,
-                  label: 'Manage Parcels',
-                },
-                {
-                  to: '/admin/dashboard/requests',
-                  icon: FileText,
-                  label: 'Pickup Requests',
-                },
-                {
-                  to: '/admin/dashboard/messages',
-                  icon: MessageCircle,
-                  label: 'Customer Messages',
-                },
-              ].map(({ to, icon: Icon, label }) => (
+              {navItems.map(({ to, icon: Icon, label }) => (
                 <NavLink
                   key={to}
                   to={to}
@@ -147,23 +167,7 @@ const AdminLayout = () => {
                 className="md:hidden bg-blue-950 text-white"
               >
                 <nav className="p-4 space-y-2">
-                  {[
-                    {
-                      to: '/admin/dashboard',
-                      icon: Clipboard,
-                      label: 'Manage Parcels',
-                    },
-                    {
-                      to: '/admin/dashboard/requests',
-                      icon: FileText,
-                      label: 'Pickup Requests',
-                    },
-                    {
-                      to: '/admin/dashboard/messages',
-                      icon: MessageCircle,
-                      label: 'Customer Messages',
-                    },
-                  ].map(({ to, icon: Icon, label }) => (
+                  {navItems.map(({ to, icon: Icon, label }) => (
                     <NavLink
                       key={to}
                       to={to}
