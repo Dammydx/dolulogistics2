@@ -134,7 +134,7 @@ const ContactPage = () => {
                 <h2 className="text-2xl font-bold mb-6">Connect With Us</h2>
                 <div className="flex space-x-4">
                   <a
-                    href="#"
+                    href="https://www.facebook.com/profile.php?id=61587318844186"
                     className="bg-gray-200 hover:bg-primary-500 hover:text-white transition-colors p-3 rounded-full"
                     aria-label="Facebook"
                   >
@@ -154,7 +154,7 @@ const ContactPage = () => {
                   </a> */}
 
                   <a
-                    href="#"
+                    href="https://www.instagram.com/dolulogistics/"
                     className="bg-gray-200 hover:bg-primary-500 hover:text-white transition-colors p-3 rounded-full"
                     aria-label="Instagram"
                   >
