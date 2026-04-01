@@ -11,6 +11,7 @@ import {
   FileText,
   Settings as SettingsIcon,
   Package,
+  ClipboardList,
 } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -47,6 +48,11 @@ const AdminLayout = () => {
       to: '/admin/bookings',
       icon: Truck,
       label: 'Dispatch Desk',
+    },
+    {
+      to: '/admin/reports',
+      icon: ClipboardList,
+      label: 'Reports',
     },
     {
       to: '/admin/messages',

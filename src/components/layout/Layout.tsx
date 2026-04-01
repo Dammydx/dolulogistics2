@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom';
 import { useEffect } from 'react';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import MobileBottomNav from './MobileBottomNav';
 
 const Layout = () => {
   useEffect(() => {
@@ -21,12 +22,13 @@ const Layout = () => {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-background font-inter text-text">
+    <div className="flex flex-col min-h-screen bg-background font-inter text-text pb-[64px] md:pb-0">
       <Navbar />
       <main className="flex-grow">
         <Outlet />
       </main>
       <Footer />
+      <MobileBottomNav />
     </div>
   );
 };

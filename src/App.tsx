@@ -23,6 +23,7 @@ import AdminMessages from './pages/admin/AdminMessages';
 import AdminPricing from './pages/admin/AdminPricing';
 import AdminTemplates from './pages/admin/AdminTemplates';
 import AdminSettings from './pages/admin/AdminSettings';
+import AdminReports from './pages/admin/AdminReports';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
@@ -53,6 +54,7 @@ function App() {
           <Route path="pricing" element={<AdminPricing />} />
           <Route path="templates" element={<AdminTemplates />} />
           <Route path="settings" element={<AdminSettings />} />
+          <Route path="reports" element={<AdminReports />} />
         </Route>
       </Routes>
     </Router>

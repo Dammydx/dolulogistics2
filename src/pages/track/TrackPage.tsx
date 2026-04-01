@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import { Package, Search, AlertTriangle } from 'lucide-react';
@@ -16,14 +16,16 @@ const TrackPage = () => {
   const [trackingId, setTrackingId] = useState(initialTrackingId);
   const [isLoading, setIsLoading] = useState(false);
   const [parcel, setParcel] = useState<Parcel | null>(null);
+  const [riderName, setRiderName] = useState<string>('');
+  const [riderPhone, setRiderPhone] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
   // Fetch parcel data when component mounts if we have an initial tracking ID
-  useState(() => {
+  useEffect(() => {
     if (initialTrackingId) {
       handleSearch();
     }
-  });
+  }, [initialTrackingId]);
 
   const handleSearch = async () => {
     if (!trackingId.trim()) {
@@ -33,8 +35,52 @@ const TrackPage = () => {
 
     setIsLoading(true);
     setError(null);
+    setRiderName('');
+    setRiderPhone('');
     
     try {
+      // First, try to fetch from bookings table (primary system)
+      const { data: bookingData, error: bookingError } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('tracking_id', trackingId)
+        .single();
+      
+      if (!bookingError && bookingData) {
+        // Create a parcel-like object from booking data
+        const parcelFromBooking: Parcel = {
+          id: bookingData.id,
+          tracking_id: bookingData.tracking_id,
+          sender_name: bookingData.sender_name,
+          sender_phone: bookingData.sender_phone,
+          sender_address: bookingData.pickup_address,
+          receiver_name: bookingData.receiver_name,
+          receiver_phone: bookingData.receiver_phone,
+          receiver_address: bookingData.dropoff_address,
+          origin_city: 'N/A',
+          destination_city: 'N/A',
+          status: bookingData.status as any,
+          weight_kg: 0,
+          delivery_notes: bookingData.item_notes || undefined,
+          expected_delivery_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+          created_at: bookingData.created_at,
+          updated_at: bookingData.updated_at,
+        };
+        
+        setParcel(parcelFromBooking);
+        
+        // Set rider info (even if empty)
+        console.log('Booking Data:', bookingData);
+        console.log('Rider Name:', bookingData.rider_name);
+        console.log('Rider Phone:', bookingData.rider_phone);
+        
+        setRiderName(bookingData.rider_name || '');
+        setRiderPhone(bookingData.rider_phone || '');
+        console.log('State updated - Rider Name:', bookingData.rider_name, 'Rider Phone:', bookingData.rider_phone);
+        return;
+      }
+      
+      // Fallback: try parcels table
       const { data, error } = await supabase
         .from('parcels')
         .select('*')
@@ -100,26 +146,39 @@ const TrackPage = () => {
                   required
                 />
               </div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="px-6 py-3 bg-primary-500 text-white rounded-md font-medium hover:bg-primary-600 transition-colors flex items-center justify-center disabled:bg-gray-400"
-              >
-                {isLoading ? (
-                  <span className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Tracking...
-                  </span>
-                ) : (
-                  <span className="flex items-center">
-                    <Search className="w-5 h-5 mr-2" />
-                    Track Parcel
-                  </span>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1 px-6 py-3 bg-primary-500 text-white rounded-md font-medium hover:bg-primary-600 transition-colors flex items-center justify-center disabled:bg-gray-400"
+                >
+                  {isLoading ? (
+                    <span className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Tracking...
+                    </span>
+                  ) : (
+                    <span className="flex items-center">
+                      <Search className="w-5 h-5 mr-2" />
+                      Track Parcel
+                    </span>
+                  )}
+                </button>
+                {parcel && (
+                  <button
+                    type="button"
+                    onClick={() => handleSearch()}
+                    disabled={isLoading}
+                    className="px-4 py-3 bg-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-400 transition-colors"
+                    title="Refresh to get latest rider info"
+                  >
+                    🔄
+                  </button>
                 )}
-              </button>
+              </div>
             </form>
           </motion.div>
           
@@ -148,7 +207,7 @@ const TrackPage = () => {
               transition={{ duration: 0.5 }}
             >
               <TrackingSteps status={parcel.status} />
-              <TrackingDetails parcel={parcel} />
+              <TrackingDetails parcel={parcel} riderName={riderName} riderPhone={riderPhone} />
             </motion.div>
           )}
         </motion.div>

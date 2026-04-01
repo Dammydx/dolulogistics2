@@ -18,7 +18,7 @@ import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import { Package, Search, AlertTriangle, Phone, MessageCircle, MapPin, Calendar, User } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { fetchBookingByTrackingId, fetchBookingHistory, getStatusLabel, getStatusColor } from '../../utils/bookings';
+import { fetchBookingByTrackingId, fetchBookingHistory, getStatusLabel, getStatusColor, getCustomerStatusLabel } from '../../utils/bookings';
 import { getAreaName } from '../../utils/locations';
 import { formatPrice } from '../../utils/pricing';
 import type { Booking, BookingStatusHistory } from '../../types/database';
@@ -266,6 +266,13 @@ const NewTrackPage = () => {
                         <p className="font-medium">{booking.receiver_name}</p>
                         <p className="text-sm text-gray-600">{booking.receiver_phone}</p>
                       </div>
+                      {(booking.rider_name || booking.rider_phone) && (
+                        <div>
+                          <p className="text-sm text-gray-500">Rider</p>
+                          {booking.rider_name && <p className="font-medium">{booking.rider_name}</p>}
+                          {booking.rider_phone && <p className="text-sm text-gray-600">{booking.rider_phone}</p>}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -309,7 +316,7 @@ const NewTrackPage = () => {
                             </span>
                             <span className="text-sm text-gray-500">{formatDate(entry.created_at)}</span>
                           </div>
-                          <p className="text-gray-700 mt-2">{entry.note}</p>
+                          <p className="text-gray-700 mt-2">{getCustomerStatusLabel(entry.status)}</p>
                         </div>
                       </div>
                     ))}

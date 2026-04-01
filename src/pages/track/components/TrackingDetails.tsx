@@ -1,10 +1,12 @@
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, User, Clock, Package } from 'lucide-react';
+import { Calendar, MapPin, User, Clock, Package, Truck } from 'lucide-react';
 import { Parcel } from '../../../types/supabase';
 import QRCode from 'react-qr-code';
 
 type TrackingDetailsProps = {
   parcel: Parcel;
+  riderName?: string;
+  riderPhone?: string;
 };
 
 const statusLabels: Record<string, string> = {
@@ -35,7 +37,9 @@ const formatDate = (dateString: string) => {
   });
 };
 
-const TrackingDetails = ({ parcel }: TrackingDetailsProps) => {
+const TrackingDetails = ({ parcel, riderName, riderPhone }: TrackingDetailsProps) => {
+  console.log('TrackingDetails Props:', { riderName, riderPhone });
+  
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       {/* Header */}
@@ -122,24 +126,53 @@ const TrackingDetails = ({ parcel }: TrackingDetailsProps) => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
           >
-            {/* Sender & Receiver */}
+            {/* Sender & Receiver & Rider */}
             <div className="bg-gray-50 rounded-lg p-4">
               <h3 className="font-semibold text-lg mb-3 flex items-center">
                 <User className="w-5 h-5 mr-2 text-primary-500" />
-                Sender & Receiver
+                Contact
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
+                {/* Sender */}
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Sender</p>
                   <p className="font-medium">{parcel.sender_name}</p>
                   <p className="text-sm text-gray-600">{parcel.sender_phone}</p>
                   <p className="text-sm text-gray-600 mt-1">{parcel.sender_address}</p>
                 </div>
+
+                {/* Divider */}
+                <div className="border-t border-gray-200"></div>
+
+                {/* Receiver */}
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Receiver</p>
                   <p className="font-medium">{parcel.receiver_name}</p>
                   <p className="text-sm text-gray-600">{parcel.receiver_phone}</p>
                   <p className="text-sm text-gray-600 mt-1">{parcel.receiver_address}</p>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-gray-200"></div>
+
+                {/* Dolu Rider */}
+                <div className="bg-white rounded p-3">
+                  <p className="text-sm text-gray-500 mb-1">Dolu Rider</p>
+                  {riderName ? (
+                    <>
+                      <p className="font-medium">{riderName}</p>
+                      {riderPhone && (
+                        <a
+                          href={`tel:${riderPhone}`}
+                          className="text-sm text-accent-600 hover:text-accent-700 font-medium"
+                        >
+                          {riderPhone}
+                        </a>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm text-gray-500 italic">Not assigned yet</p>
+                  )}
                 </div>
               </div>
             </div>

@@ -17,6 +17,8 @@ import {
   History,
   Send,
   User,
+  Copy,
+  MessageCircle,
 } from 'lucide-react';
 
 
@@ -36,6 +38,7 @@ const AdminBookings = () => {
   const [statusNote, setStatusNote] = useState('');
   const [riderName, setRiderName] = useState('');
   const [riderPhone, setRiderPhone] = useState('');
+  const [updatingBookingId, setUpdatingBookingId] = useState<string | null>(null);
 
   const statuses: BookingStatus[] = [
     'pending',
@@ -94,7 +97,95 @@ const AdminBookings = () => {
     }
   };
 
+  // Copy WhatsApp summary to clipboard
+  const handleCopyWhatsAppSummary = async () => {
+    if (!selectedBooking) return;
 
+    // Fetch area name for pickup
+    let pickupAreaName = '';
+    let dropoffAreaName = '';
+    try {
+      const { data: pickupArea } = await supabase
+        .from('locations_areas')
+        .select('name')
+        .eq('id', selectedBooking.pickup_area_id)
+        .single();
+      pickupAreaName = pickupArea?.name || '';
+
+      const { data: dropoffArea } = await supabase
+        .from('locations_areas')
+        .select('name')
+        .eq('id', selectedBooking.dropoff_area_id)
+        .single();
+      dropoffAreaName = dropoffArea?.name || '';
+    } catch (err) {
+      console.error('Error fetching area names:', err);
+    }
+
+    // New formatted WhatsApp booking summary
+    const summary = `Dolu Logistics Booking
+Tracking ID: ${selectedBooking.tracking_id}
+
+PICKUP: ${selectedBooking.sender_name} | ${selectedBooking.pickup_address}${pickupAreaName ? ', ' + pickupAreaName : ''} | ${selectedBooking.sender_phone} | ${selectedBooking.item_notes || 'General Item'}
+DROP-OFF: ${selectedBooking.receiver_name} | ${selectedBooking.dropoff_address}${dropoffAreaName ? ', ' + dropoffAreaName : ''} | ${selectedBooking.receiver_phone}
+
+A rider is being assigned. Thanks for trusting Dolu! ❤️
+
+PAYMENT:
+4005159115 | Moniepoint | Dolu Logistics LTD
+Send proof of payment for confirmation. Thanks! ❤️`;
+
+    try {
+      await navigator.clipboard.writeText(summary);
+      toast.success('WhatsApp summary copied to clipboard!');
+    } catch (err) {
+      toast.error('Failed to copy summary');
+    }
+  };
+
+  // Copy Customer Tracking Update
+  const handleCopyCustomerUpdate = async () => {
+    if (!selectedBooking) return;
+
+    let pickupAreaName = '';
+    let dropoffAreaName = '';
+    try {
+      const { data: pickupArea } = await supabase
+        .from('locations_areas')
+        .select('name')
+        .eq('id', selectedBooking.pickup_area_id)
+        .single();
+      pickupAreaName = pickupArea?.name || 'Pickup';
+
+      const { data: dropoffArea } = await supabase
+        .from('locations_areas')
+        .select('name')
+        .eq('id', selectedBooking.dropoff_area_id)
+        .single();
+      dropoffAreaName = dropoffArea?.name || 'Drop-off';
+    } catch (err) {
+      console.error('Error fetching area names:', err);
+    }
+
+    const trackingUpdateText = `Dolu Logistics: Tracking Update
+
+Tracking ID: ${selectedBooking.tracking_id}
+Customer: ${selectedBooking.sender_name}
+
+Route: ${pickupAreaName} ➔ ${dropoffAreaName}
+Call the rider: ${selectedBooking.rider_name || 'To be assigned'} (${selectedBooking.rider_phone || 'N/A'})
+
+Live Tracking: https://dolulogistics.com/track?id=${selectedBooking.tracking_id}
+
+A rider is on the way for your pickup and delivery. Thank you for trusting Dolu!`;
+
+    try {
+      await navigator.clipboard.writeText(trackingUpdateText);
+      toast.success('Customer Tracking Update copied!');
+    } catch (err) {
+      toast.error('Failed to copy tracking update');
+    }
+  };
 
   const fetchBookingHistory = async (bookingId: string) => {
     try {
@@ -125,6 +216,19 @@ const AdminBookings = () => {
   const handleUpdateStatus = async () => {
     if (!selectedBooking || !newStatus) {
       toast.error('Please select a new status');
+      return;
+    }
+
+    // Validation: Prevent status updates from Delivered (final state)
+    if (selectedBooking.status === 'delivered') {
+      toast.error('Cannot update status - booking is already delivered');
+      return;
+    }
+
+    // Validation: Ensure new status is in allowed next statuses
+    const allowedStatuses = nextStatuses[selectedBooking.status];
+    if (!allowedStatuses.includes(newStatus)) {
+      toast.error('Invalid status transition');
       return;
     }
 
@@ -172,36 +276,77 @@ const AdminBookings = () => {
     }
   };
 
+  // Quick inline status update from table dropdown
+  const handleQuickStatusUpdate = async (bookingId: string, newBookingStatus: BookingStatus) => {
+    try {
+      setUpdatingBookingId(bookingId);
+
+      const currentBooking = bookings.find(b => b.id === bookingId);
+      if (!currentBooking) return;
+
+      // Validation: Prevent status updates from Delivered (final state)
+      if (currentBooking.status === 'delivered') {
+        toast.error('Cannot update status - booking is already delivered');
+        return;
+      }
+
+      // Validation: Ensure new status is in allowed next statuses
+      const allowedStatuses = nextStatuses[currentBooking.status];
+      if (!allowedStatuses.includes(newBookingStatus)) {
+        toast.error('Invalid status transition');
+        return;
+      }
+
+      // Update booking status
+      const { error: updateError } = await supabase
+        .from('bookings')
+        .update({
+          status: newBookingStatus,
+        })
+        .eq('id', bookingId);
+
+      if (updateError) throw updateError;
+
+      // Create history entry
+      const { error: historyError } = await supabase
+        .from('booking_status_history')
+        .insert([
+          {
+            booking_id: bookingId,
+            status: newBookingStatus,
+            note: `Status changed to ${getStatusLabel(newBookingStatus)}`,
+            created_by: 'admin',
+          },
+        ]);
+
+      if (historyError) throw historyError;
+
+      toast.success('Status updated successfully');
+      await fetchBookings();
+    } catch (err) {
+      console.error('Error updating status:', err);
+      toast.error('Failed to update status');
+    } finally {
+      setUpdatingBookingId(null);
+    }
+  };
+
   const handleSendSMS = async () => {
     if (!selectedBooking) return;
 
-    try {
-      // TODO: Implement SMS sending via Supabase Edge Function
-      // For now, just log the action
-      console.log('Send SMS for booking:', selectedBooking.tracking_id);
-
-      // Create a message log entry
-      const { error } = await supabase.from('message_logs').insert([
-        {
-          message_type: 'sms',
-          recipient: selectedBooking.sender_phone,
-          booking_id: selectedBooking.id,
-          template_code: 'tracking_notification',
-          subject: null,
-          body: `Your parcel tracking ID: ${selectedBooking.tracking_id}. Track it on our website.`,
-          status: 'pending',
-          triggered_by: 'admin',
-          cost: 0,
-        },
-      ]);
-
-      if (error) throw error;
-
-      toast.success('SMS queued for sending');
-    } catch (err) {
-      console.error('Error sending SMS:', err);
-      toast.error('Failed to send SMS');
-    }
+    // SMS sending is disabled for now
+    toast.info('SMS sending feature is currently disabled');
+    return;
+    
+    // TODO: Implement SMS sending via Supabase Edge Function when ready
+    // try {
+    //   const { error } = await supabase.from('message_logs').insert([{...}]);
+    //   if (error) throw error;
+    //   toast.success('SMS queued for sending');
+    // } catch (err) {
+    //   console.error('Error sending SMS:', err);
+    //   toast.error('Failed to send SMS');
+    // }
   };
 
   const getStatusLabel = (status: BookingStatus): string => {
@@ -212,6 +357,19 @@ const AdminBookings = () => {
       delivered: 'Delivered',
       not_accepted: 'Not Accepted',
       cancelled: 'Cancelled',
+    };
+    return labels[status];
+  };
+
+  // Customer-facing status labels
+  const getCustomerStatusLabel = (status: BookingStatus): string => {
+    const labels = {
+      pending: 'Payment Pending',
+      confirmed: 'Your payment has been confirmed.',
+      in_progress: 'Rider has been dispatched, you will be contacted.',
+      delivered: 'Delivered! Thanks for choosing Dolu Logistics.',
+      not_accepted: 'Booking Not Accepted',
+      cancelled: 'Booking Cancelled',
     };
     return labels[status];
   };
@@ -228,13 +386,14 @@ const AdminBookings = () => {
     return colors[status];
   };
 
+  // Strict sequential status flow - once delivered, cannot revert
   const nextStatuses: Record<BookingStatus, BookingStatus[]> = {
     pending: ['confirmed', 'not_accepted', 'cancelled'],
-    confirmed: ['in_progress', 'not_accepted', 'cancelled'],
-    in_progress: ['delivered', 'cancelled'],
-    delivered: [],
-    not_accepted: ['cancelled', 'pending'],
-    cancelled: ['pending'],
+    confirmed: ['in_progress', 'cancelled'],  // Remove not_accepted as per new flow
+    in_progress: ['delivered'],  // Only allow delivered, no cancellation
+    delivered: [],  // Final state - no changes allowed
+    not_accepted: ['cancelled'],  // Only cancellation allowed
+    cancelled: [],  // Final state - no changes allowed
   };
 
   if (isLoading) {
@@ -354,13 +513,36 @@ const AdminBookings = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span
-                        className={`text-xs font-semibold px-3 py-1 rounded-full ${getStatusColor(
-                          booking.status
-                        )}`}
-                      >
-                        {getStatusLabel(booking.status)}
-                      </span>
+                      <div className="relative group">
+                        <select
+                          value={booking.status}
+                          onChange={(e) => handleQuickStatusUpdate(booking.id, e.target.value as BookingStatus)}
+                          disabled={updatingBookingId === booking.id || booking.status === 'delivered'}
+                          className={`text-xs font-semibold px-3 py-1 rounded-full border-2 transition-colors cursor-pointer appearance-none pr-6 focus:outline-none focus:ring-2 focus:ring-offset-0 ${
+                            updatingBookingId === booking.id
+                              ? 'opacity-50 cursor-not-allowed'
+                              : booking.status === 'delivered'
+                              ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                              : getStatusColor(booking.status)
+                          }`}
+                          title={booking.status === 'delivered' ? 'Delivered status cannot be changed' : 'Click to change status'}
+                        >
+                          <option value={booking.status}>{getStatusLabel(booking.status)}</option>
+                          {nextStatuses[booking.status].map((status) => (
+                            <option key={status} value={status}>
+                              {getStatusLabel(status)}
+                            </option>
+                          ))}
+                        </select>
+                        {updatingBookingId === booking.id && (
+                          <span className="absolute right-1 top-1/2 transform -translate-y-1/2">
+                            <svg className="animate-spin h-3 w-3 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">
                       {booking.rider_name ? (
@@ -402,13 +584,36 @@ const AdminBookings = () => {
                     <code className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
                       {booking.tracking_id}
                     </code>
-                    <span
-                      className={`text-xs font-semibold px-3 py-1 rounded-full ${getStatusColor(
-                        booking.status
-                      )}`}
-                    >
-                      {getStatusLabel(booking.status)}
-                    </span>
+                    <div className="relative">
+                      <select
+                        value={booking.status}
+                        onChange={(e) => handleQuickStatusUpdate(booking.id, e.target.value as BookingStatus)}
+                        disabled={updatingBookingId === booking.id || booking.status === 'delivered'}
+                        className={`text-xs font-semibold px-3 py-1 rounded-full border-2 transition-colors cursor-pointer appearance-none pr-6 focus:outline-none focus:ring-2 focus:ring-offset-0 ${
+                          updatingBookingId === booking.id
+                            ? 'opacity-50 cursor-not-allowed'
+                            : booking.status === 'delivered'
+                            ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                            : getStatusColor(booking.status)
+                        }`}
+                        title={booking.status === 'delivered' ? 'Delivered status cannot be changed' : 'Click to change status'}
+                      >
+                        <option value={booking.status}>{getStatusLabel(booking.status)}</option>
+                        {nextStatuses[booking.status].map((status) => (
+                          <option key={status} value={status}>
+                            {getStatusLabel(status)}
+                          </option>
+                        ))}
+                      </select>
+                      {updatingBookingId === booking.id && (
+                        <span className="absolute right-1 top-1/2 transform -translate-y-1/2">
+                          <svg className="animate-spin h-3 w-3 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="space-y-2 mb-3">
                     <p className="text-sm font-medium text-gray-900">
@@ -461,13 +666,62 @@ const AdminBookings = () => {
 
             {/* Modal Content */}
             <div className="p-6 space-y-6">
-              {/* Tracking ID */}
+              {/* Tracking ID & WhatsApp Summary */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-gray-600 mb-1">Tracking ID</p>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-sm text-gray-600">Tracking ID</p>
+                </div>
                 <code className="text-2xl font-mono font-bold text-blue-900">
                   {selectedBooking.tracking_id}
                 </code>
               </div>
+
+              {/* Copy WhatsApp Summary Button */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={handleCopyWhatsAppSummary}
+                  className="flex-1 px-4 py-3 bg-green-50 border-2 border-green-500 text-green-700 rounded-lg font-medium hover:bg-green-100 transition-colors flex items-center justify-center gap-2"
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  Copy WhatsApp Summary
+                </button>
+                <button
+                  onClick={handleCopyCustomerUpdate}
+                  className="flex-1 px-4 py-3 bg-accent-50 border-2 border-accent-300 text-accent-700 rounded-lg font-medium hover:bg-accent-100 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Copy className="h-5 w-5" />
+                  Customer Tracking Update
+                </button>
+              </div>
+
+              {/* Dolu Rider */}
+              {selectedBooking.rider_name && (
+                <div className="bg-accent-50 border-l-4 border-accent-500 rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <User className="h-5 w-5 text-accent-600" />
+                    Dolu Rider
+                  </h3>
+                  <div className="space-y-2">
+                    <div>
+                      <p className="text-sm text-gray-600">Name</p>
+                      <p className="font-medium text-gray-900">{selectedBooking.rider_name}</p>
+                    </div>
+                    {selectedBooking.rider_phone && (
+                      <div>
+                        <p className="text-sm text-gray-600 flex items-center gap-1">
+                          <Phone className="h-4 w-4" /> Phone
+                        </p>
+                        <a
+                          href={`tel:${selectedBooking.rider_phone}`}
+                          className="font-medium text-accent-600 hover:text-accent-700"
+                        >
+                          {selectedBooking.rider_phone}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Sender Info */}
               <div>
@@ -675,7 +929,7 @@ const AdminBookings = () => {
                             {new Date(entry.created_at).toLocaleString()}
                           </p>
                           <p className="text-sm font-medium text-gray-900">
-                            {entry.note}
+                            {getCustomerStatusLabel(entry.status)}
                           </p>
                           <p className="text-xs text-gray-500">
                             By: {entry.created_by}
@@ -766,10 +1020,12 @@ const AdminBookings = () => {
                     </button>
                     <button
                       onClick={handleSendSMS}
-                      className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium flex items-center justify-center gap-2"
+                      disabled={true}
+                      title="SMS sending feature is currently disabled"
+                      className="flex-1 px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed font-medium flex items-center justify-center gap-2"
                     >
                       <Send className="h-4 w-4" />
-                      Send Tracking SMS
+                      Send Tracking SMS (Disabled)
                     </button>
                   </div>
                 </div>

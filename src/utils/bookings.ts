@@ -225,3 +225,19 @@ export function getStatusColor(status: string): string {
 
   return colors[status] || 'bg-gray-100 text-gray-800';
 }
+
+/**
+ * Customer-facing status labels corresponding to the history timeline
+ */
+export function getCustomerStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    pending: 'Payment Pending',
+    confirmed: 'Your payment has been confirmed.',
+    in_progress: 'Rider has been dispatched, you will be contacted.',
+    delivered: 'Delivered! Thanks for choosing Dolu Logistics.',
+    not_accepted: 'Booking Not Accepted',
+    cancelled: 'Booking Cancelled',
+  };
+
+  return labels[status] || status;
+}

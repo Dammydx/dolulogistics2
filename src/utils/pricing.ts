@@ -72,7 +72,11 @@ export async function calculatePriceQuote(
     }
 
     // Step 2: Get base price from zone rates
-    const { data: zoneRate, error: rateError } = await supabase
+    // To support the "Highest-Zone" Pricing Logic, we need the base prices of BOTH zones.
+    // The current schema uses `to_zone_id` to determine a zone's base price.
+    
+    // 1. Get Drop-off Zone Base Price (and ETA) mapped to the route
+    const { data: dropoffRate, error: rateError } = await supabase
       .from('pricing_zone_rates')
       .select('base_price, eta_text')
       .eq('from_zone_id', pickupArea.zone_id)
@@ -80,7 +84,7 @@ export async function calculatePriceQuote(
       .eq('active', true)
       .maybeSingle();
 
-    if (rateError || !zoneRate) {
+    if (rateError || !dropoffRate) {
       return {
         success: false,
         base_price: 0,
@@ -91,7 +95,21 @@ export async function calculatePriceQuote(
       };
     }
 
-    const basePrice = parseFloat(zoneRate.base_price.toString());
+    // 2. Get Pickup Zone Base Price
+    // We can get this by looking up the cost of delivering TO the pickup zone
+    const { data: pickupRate } = await supabase
+      .from('pricing_zone_rates')
+      .select('base_price')
+      .eq('from_zone_id', pickupArea.zone_id)
+      .eq('to_zone_id', pickupArea.zone_id)
+      .eq('active', true)
+      .maybeSingle();
+
+    const dropoffPrice = parseFloat(dropoffRate.base_price.toString());
+    const pickupPrice = pickupRate?.base_price ? parseFloat(pickupRate.base_price.toString()) : 0;
+
+    // Apply Highest-Zone Logic
+    const basePrice = Math.max(pickupPrice, dropoffPrice);
 
     // Step 3: Calculate add-ons price (if any selected)
     let addonsPrice = 0;
@@ -116,7 +134,7 @@ export async function calculatePriceQuote(
       base_price: basePrice,
       addons_price: addonsPrice,
       total_price: totalPrice,
-      eta_text: zoneRate.eta_text,
+      eta_text: dropoffRate.eta_text,
     };
   } catch (error) {
     console.error('Error calculating price quote:', error);

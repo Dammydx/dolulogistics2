@@ -1,11 +1,17 @@
 /*
-  # Create Pricing Tables for Zone-Based Pricing System
+  # Create Pricing Tables for Zone-Based Pricing System (v1.1)
 
-  ## Purpose
-  These tables store the pricing configuration that admins manage.
-  - Zone-to-zone rates (e.g., Zone A → Zone B = ₦500)
-  - Add-on fees (Fragile, Express)
-  - Used by Get Quote and Request Pickup to calculate prices
+  ## Pricing Model (Updated)
+  The price is determined by the DESTINATION zone.
+  All from-zone → to-zone combinations with the same destination zone share the same price.
+
+  | Zone | Price  |
+  |------|--------|
+  | A    | ₦2,500 |
+  | B    | ₦3,000 |
+  | C    | ₦3,500 |
+  | D    | ₦4,000 |
+  | E    | ₦5,000 |
 
   ## Tables Created
   1. `pricing_zone_rates` - Base prices between zones
@@ -15,18 +21,6 @@
   - RLS enabled
   - Public can READ (for price calculations)
   - Only authenticated users (admin) can INSERT/UPDATE/DELETE
-
-  ## Pricing Logic Flow
-  1. Customer selects pickup area + dropoff area
-  2. System looks up: area → zone
-  3. System finds zone_rate where from_zone + to_zone match
-  4. Adds any selected add-ons (fragile, express)
-  5. Returns total price
-
-  ## Important Notes
-  - Rates are directional (Zone A → Zone B may differ from Zone B → Zone A)
-  - Each rate has an optional ETA text for customer display
-  - Inactive rates are hidden from public queries
 */
 
 -- ============================================================
@@ -91,7 +85,9 @@ CREATE POLICY "Authenticated users can manage addons"
   WITH CHECK (true);
 
 -- ============================================================
--- SEED DATA: Sample zone rates for Port Harcourt
+-- SEED DATA: Zone rates for Port Harcourt (v1.1)
+-- Price is determined by destination zone regardless of origin.
+-- We create a 5×5 matrix where each to_zone row has the same price.
 -- ============================================================
 
 DO $$
@@ -99,34 +95,50 @@ DECLARE
   v_zone_a_id uuid;
   v_zone_b_id uuid;
   v_zone_c_id uuid;
+  v_zone_d_id uuid;
+  v_zone_e_id uuid;
+  v_from_id uuid;
+  v_zone_ids uuid[];
 BEGIN
-  SELECT z.id INTO v_zone_a_id 
-  FROM location_zones z 
-  JOIN locations_cities c ON z.city_id = c.id 
+  SELECT z.id INTO v_zone_a_id
+  FROM location_zones z
+  JOIN locations_cities c ON z.city_id = c.id
   WHERE c.name = 'Port Harcourt' AND z.name = 'Zone A';
 
-  SELECT z.id INTO v_zone_b_id 
-  FROM location_zones z 
-  JOIN locations_cities c ON z.city_id = c.id 
+  SELECT z.id INTO v_zone_b_id
+  FROM location_zones z
+  JOIN locations_cities c ON z.city_id = c.id
   WHERE c.name = 'Port Harcourt' AND z.name = 'Zone B';
 
-  SELECT z.id INTO v_zone_c_id 
-  FROM location_zones z 
-  JOIN locations_cities c ON z.city_id = c.id 
+  SELECT z.id INTO v_zone_c_id
+  FROM location_zones z
+  JOIN locations_cities c ON z.city_id = c.id
   WHERE c.name = 'Port Harcourt' AND z.name = 'Zone C';
 
-  IF v_zone_a_id IS NOT NULL AND v_zone_b_id IS NOT NULL AND v_zone_c_id IS NOT NULL THEN
-    INSERT INTO pricing_zone_rates (from_zone_id, to_zone_id, base_price, eta_text, active) VALUES
-      (v_zone_a_id, v_zone_a_id, 800.00, '30-45 minutes', true),
-      (v_zone_a_id, v_zone_b_id, 1200.00, '45-60 minutes', true),
-      (v_zone_a_id, v_zone_c_id, 1500.00, '60-90 minutes', true),
-      (v_zone_b_id, v_zone_a_id, 1200.00, '45-60 minutes', true),
-      (v_zone_b_id, v_zone_b_id, 1000.00, '30-45 minutes', true),
-      (v_zone_b_id, v_zone_c_id, 1300.00, '45-60 minutes', true),
-      (v_zone_c_id, v_zone_a_id, 1500.00, '60-90 minutes', true),
-      (v_zone_c_id, v_zone_b_id, 1300.00, '45-60 minutes', true),
-      (v_zone_c_id, v_zone_c_id, 1200.00, '30-60 minutes', true)
-    ON CONFLICT (from_zone_id, to_zone_id) DO NOTHING;
+  SELECT z.id INTO v_zone_d_id
+  FROM location_zones z
+  JOIN locations_cities c ON z.city_id = c.id
+  WHERE c.name = 'Port Harcourt' AND z.name = 'Zone D';
+
+  SELECT z.id INTO v_zone_e_id
+  FROM location_zones z
+  JOIN locations_cities c ON z.city_id = c.id
+  WHERE c.name = 'Port Harcourt' AND z.name = 'Zone E';
+
+  IF v_zone_a_id IS NOT NULL AND v_zone_b_id IS NOT NULL AND v_zone_c_id IS NOT NULL AND v_zone_d_id IS NOT NULL AND v_zone_e_id IS NOT NULL THEN
+    v_zone_ids := ARRAY[v_zone_a_id, v_zone_b_id, v_zone_c_id, v_zone_d_id, v_zone_e_id];
+
+    -- For each FROM zone, create rates TO every zone
+    FOREACH v_from_id IN ARRAY v_zone_ids
+    LOOP
+      INSERT INTO pricing_zone_rates (from_zone_id, to_zone_id, base_price, eta_text, active) VALUES
+        (v_from_id, v_zone_a_id, 2500.00, '30-60 minutes', true),
+        (v_from_id, v_zone_b_id, 3000.00, '45-75 minutes', true),
+        (v_from_id, v_zone_c_id, 3500.00, '60-90 minutes', true),
+        (v_from_id, v_zone_d_id, 4000.00, '60-90 minutes', true),
+        (v_from_id, v_zone_e_id, 5000.00, '90-120 minutes', true)
+      ON CONFLICT (from_zone_id, to_zone_id) DO NOTHING;
+    END LOOP;
   END IF;
 END $$;
 
