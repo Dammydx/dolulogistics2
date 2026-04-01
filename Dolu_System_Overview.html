@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dolu Logistics - System Overview</title>
+  <style>
+    body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  color: #0F172A;
+  background-color: #F7FAFF;
+  line-height: 1.6;
+  padding: 40px;
+}
+
+h1 {
+  color: #0B3C7A;
+  font-size: 2.5em;
+  border-bottom: 4px solid #8BCF1A;
+  padding-bottom: 15px;
+  margin-bottom: 30px;
+}
+
+h2 {
+  color: #1558B0;
+  font-size: 1.8em;
+  margin-top: 40px;
+  border-bottom: 2px solid #E2E8F0;
+  padding-bottom: 10px;
+}
+
+h3 {
+  color: #0F4C9E;
+  font-size: 1.4em;
+  margin-top: 25px;
+}
+
+p {
+  color: #334155;
+  font-size: 1.05em;
+  margin-bottom: 15px;
+}
+
+ul {
+  margin-bottom: 20px;
+  color: #334155;
+}
+
+li {
+  margin-bottom: 10px;
+  font-size: 1.05em;
+}
+
+strong {
+  color: #082F61;
+}
+
+li::marker {
+  color: #1558B0;
+}
+
+code {
+  background-color: #DBEAFE;
+  color: #06244B;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-weight: bold;
+}
+
+hr {
+  border: 0;
+  height: 2px;
+  background-color: #BFDBFE;
+  margin: 40px 0;
+}
+
+/* Print Specific Rules */
+@page {
+  margin: 2cm;
+}
+
+@media print {
+  body {
+    background-color: white;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <h1>Dolu Logistics - System Explanation &amp; Workflow Guide</h1>
+<p>Welcome to the internal system overview for Dolu Logistics. This document is designed to guide stakeholders, partners, or new developers through the logical flow of the entire application, breaking down both the customer-facing experience and the internal administrative operations.</p>
+<hr>
+<h2>1. System Overview &amp; Technology</h2>
+<p>Dolu Logistics is a modern, responsive web application designed to streamline package pickup, delivery tracking, and dispatch management. </p>
+<ul>
+<li><strong>Frontend:</strong> Built with React, Vite, and Tailwind CSS (providing the sleek &quot;glassmorphism&quot; aesthetic and responsive mobile design).</li>
+<li><strong>Backend &amp; Database:</strong> Powered by Supabase (PostgreSQL), handling real-time data storage, tracking IDs, and administrative authentication.</li>
+<li><strong>Hosting:</strong> Deployed via Vercel for fast, scalable cloud hosting.</li>
+</ul>
+<hr>
+<h2>2. The Customer Experience (Frontend Flow)</h2>
+<p>The public-facing website is designed to be as frictionless as possible for standard users.</p>
+<h3>A. Requesting a Pickup</h3>
+<ol>
+<li><strong>Initiation:</strong> The user navigates to the Request Pickup page (<code>/request-pickup</code>).</li>
+<li><strong>Form Details:</strong> The user fills in:<ul>
+<li>Sender details (Name, Phone, WhatsApp).</li>
+<li>Pickup location (State, City, dynamic Area selection).</li>
+<li>Receiver details.</li>
+<li>Drop-off location.</li>
+<li>Package details (Category, Notes).</li>
+</ul>
+</li>
+<li><strong>Dynamic Pricing Engine:</strong> As the user selects the Pickup and Drop-off areas, the system calculates the price automatically.<ul>
+<li><strong>The &quot;Highest-Zone&quot; Rule:</strong> To maintain profitability, the system queries the fixed Base Price for the Pickup Zone and the Drop-off Zone, and naturally applies the <strong>highest</strong> of the two.</li>
+</ul>
+</li>
+<li><strong>Submission:</strong> Upon submission, the order is securely pushed to the Supabase database. The system automatically generates a unique, sequentially accurate Tracking ID (e.g., <code>DL20260401003</code>).</li>
+</ol>
+<h3>B. Tracking a Parcel</h3>
+<ol>
+<li><strong>The Tracking Page (<code>/track</code>):</strong> The customer inputs their <code>DL</code>-prefixed Tracking ID.</li>
+<li><strong>Status Interface:</strong> The system pulls the live data and displays:<ul>
+<li><strong>Tracking Timeline:</strong> A clear step-by-step history reading exactly how the admin updates it (e.g., <em>&quot;Your payment has been confirmed&quot;</em>, <em>&quot;Rider has been dispatched&quot;</em>).</li>
+<li><strong>Booking Details &amp; Route:</strong> Summarizes where the package is going.</li>
+<li><strong>Rider Contact Section:</strong> Displays the rider&#39;s name and phone number (dynamically surfacing once an admin assigns them), letting the customer know exactly who to expect.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2>3. The Administrative Operations (Admin Flow)</h2>
+<p>The Admin section (<code>/admin</code>) is securely protected and acts as the central hub for dispatchers and managers.</p>
+<h3>A. Admin Dashboard</h3>
+<ul>
+<li>Provides a high-level view of active metrics (Pending Deliveries, Revenue, Active Riders) to allow for quick operational pulse-checks.</li>
+</ul>
+<h3>B. Dispatch Desk</h3>
+<p>The heart of the logistics operation. Here, admins process all incoming customer requests.</p>
+<ul>
+<li><strong>Booking Lists:</strong> Admins see all active booking requests in a clean table format.</li>
+<li><strong>Fast Status Updates:</strong> Operations managers can shift a parcel&#39;s status (Pending -&gt; Confirmed -&gt; In Progress -&gt; Delivered) using inline dropdown menus or a detailed modal view.</li>
+<li><strong>Rider Assignment:</strong> When moving a parcel to &#39;In Progress&#39;, the admin assigns a Rider Name and Phone Number. This data immediately becomes visible on the customer&#39;s public tracking timeline!</li>
+<li><strong>Rapid Communication Tools:</strong><ul>
+<li><strong>Copy WhatsApp Summary:</strong> Instantly copies a neatly formatted summary of the entire gig (including Tracking ID, Sender, Receiver, Item, and Payment Details) to easily send to the assigned rider or logistics group chat.</li>
+<li><strong>Customer Tracking Update:</strong> Copies a pre-formatted message meant for the customer, providing them with their Tracking ID, exact routing (e.g., <em>Rumuola ➔ Borikiri</em>), the assigned rider&#39;s contact, and the direct tracking URL.</li>
+</ul>
+</li>
+</ul>
+<h3>C. Reports</h3>
+<p>A robust tool for accounting and performance analysis.</p>
+<ul>
+<li><strong>Metrics Filtering:</strong> Admins can select any specific Month and Year.</li>
+<li><strong>Summary Cards:</strong> Shows Total Bookings, Delivered properties, Canceled operations, and <strong>Revenue</strong> (calculated actively by summing the <code>price_total</code> exclusively for successfully &#39;Delivered&#39; orders).</li>
+<li><strong>Excel Generation:</strong> A &#39;Download Monthly Report&#39; button triggers an active export utilizing the <code>xlsx</code> library, parsing the month&#39;s filtered data into an Excel spreadsheet containing Date, Tracking ID, Customer, Pickup, Drop-off, Rider, and Financial Amount.</li>
+</ul>
+<h3>D. Pricing Management</h3>
+<ul>
+<li><strong>Zone Adjustments:</strong> The Administrator can instantly alter the base costs for individual zones across the operating region. Because the &#39;Highest-Zone&#39; logic controls the checkout form, changing a zone&#39;s base price perfectly updates cross-zone trip calculations without touching any code.</li>
+</ul>
+<h3>E. Templates &amp; Messages</h3>
+<ul>
+<li>Allows the team to review incoming Contact Form messages from prospective corporate clients and standardize communication processes.</li>
+</ul>
+<hr>
+<h2>4. Platform Strengths &amp; Value Proposition</h2>
+<p>When reviewing Dolu Logistics with partners or developers, emphasize the following points:</p>
+<ol>
+<li><strong>Automation:</strong> Unique tracking IDs and smart pricing engines save immense manual labor.</li>
+<li><strong>Transparency:</strong> Customers always know where their package is and exactly who to call via the robust live-tracking timeline.</li>
+<li><strong>Dispatch Efficiency:</strong> The UI is designed specifically to help dispatchers manage hundreds of trips a day without leaving a single screen, making communication out to riders and customers 1-click simple.</li>
+<li><strong>Data Driven:</strong> The native Excel reporting guarantees seamless handoffs to the accounting and management teams at the end of every month.</li>
+</ol>
+
+  <script>
+    // Automatically trigger print dialog when opened
+    window.onload = () => {
+      setTimeout(() => {
+        window.print();
+      }, 500);
+    };
+  </script>
+</body>
+</html>

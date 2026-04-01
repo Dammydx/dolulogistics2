@@ -62,7 +62,7 @@ const Navbar = () => {
             <img
               src={doluLogo}
               alt="Dolu Logistics Logo"
-              className="h-14 md:h-16 w-auto object-contain"
+              className="h-10 md:h-10 w-auto object-contain"
             />
             {/* 
               🔧 LOGO SIZE GUIDE:
