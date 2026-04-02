@@ -1,0 +1,27 @@
+{
+  "name": "Dolu Logistics",
+  "short_name": "DL",
+  "description": "Dolu Logistics Booking and Tracking App",
+  "theme_color": "#F7FAFF",
+  "background_color": "#F7FAFF",
+  "display": "standalone",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "1000x1000",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -232,19 +232,24 @@ const NewTrackPage = () => {
                       <MapPin className="w-5 h-5 mr-2 text-primary-500" />
                       Route
                     </h3>
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm text-gray-500">Pickup</p>
-                        <p className="font-medium">{pickupAreaName}</p>
-                        <p className="text-sm text-gray-600">{booking.pickup_address}</p>
+                    <div className="relative pl-6 space-y-6 mt-2 pb-2">
+                      {/* Connection Line */}
+                      <div className="absolute left-[11px] top-4 bottom-6 w-[2px] bg-gray-200"></div>
+                      
+                      {/* Pickup */}
+                      <div className="relative">
+                        <div className="absolute -left-[24px] top-1.5 w-2.5 h-2.5 rounded-full ring-4 ring-gray-50 bg-gray-400 z-10"></div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Pickup</p>
+                        <p className="font-medium text-gray-900">{pickupAreaName}</p>
+                        <p className="text-sm text-gray-500">{booking.pickup_address}</p>
                       </div>
-                      <div className="flex justify-center">
-                        <div className="w-0.5 h-6 bg-gray-300"></div>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Dropoff</p>
-                        <p className="font-medium">{dropoffAreaName}</p>
-                        <p className="text-sm text-gray-600">{booking.dropoff_address}</p>
+
+                      {/* Dropoff */}
+                      <div className="relative">
+                        <div className="absolute -left-[24px] top-1.5 w-2.5 h-2.5 rounded-full ring-4 ring-gray-50 bg-primary-500 z-10"></div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Dropoff</p>
+                        <p className="font-medium text-gray-900">{dropoffAreaName}</p>
+                        <p className="text-sm text-gray-500">{booking.dropoff_address}</p>
                       </div>
                     </div>
                   </div>
@@ -255,22 +260,33 @@ const NewTrackPage = () => {
                       <User className="w-5 h-5 mr-2 text-primary-500" />
                       Contact
                     </h3>
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm text-gray-500">Sender</p>
-                        <p className="font-medium">{booking.sender_name}</p>
-                        <p className="text-sm text-gray-600">{booking.sender_phone}</p>
+                    <div className="relative pl-6 space-y-6 mt-2 pb-2">
+                      {/* Connection Line */}
+                      <div className="absolute left-[11px] top-4 bottom-6 w-[2px] bg-gray-200"></div>
+
+                      {/* Sender */}
+                      <div className="relative">
+                        <div className="absolute -left-[24px] top-1.5 w-2.5 h-2.5 rounded-full ring-4 ring-gray-50 bg-gray-400 z-10"></div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Sender</p>
+                        <p className="font-medium text-gray-900">{booking.sender_name}</p>
+                        <p className="text-sm text-gray-500">{booking.sender_phone}</p>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Receiver</p>
-                        <p className="font-medium">{booking.receiver_name}</p>
-                        <p className="text-sm text-gray-600">{booking.receiver_phone}</p>
+
+                      {/* Receiver */}
+                      <div className="relative">
+                        <div className="absolute -left-[24px] top-1.5 w-2.5 h-2.5 rounded-full ring-4 ring-gray-50 bg-primary-500 z-10"></div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Receiver</p>
+                        <p className="font-medium text-gray-900">{booking.receiver_name}</p>
+                        <p className="text-sm text-gray-500">{booking.receiver_phone}</p>
                       </div>
+
+                      {/* Rider */}
                       {(booking.rider_name || booking.rider_phone) && (
-                        <div>
-                          <p className="text-sm text-gray-500">Rider</p>
-                          {booking.rider_name && <p className="font-medium">{booking.rider_name}</p>}
-                          {booking.rider_phone && <p className="text-sm text-gray-600">{booking.rider_phone}</p>}
+                        <div className="relative">
+                          <div className="absolute -left-[24px] top-1.5 w-2.5 h-2.5 rounded-full ring-4 ring-gray-50 bg-accent-500 z-10"></div>
+                          <p className="text-xs font-semibold uppercase tracking-wider text-accent-500 mb-1">Rider</p>
+                          {booking.rider_name && <p className="font-medium text-gray-900">{booking.rider_name}</p>}
+                          {booking.rider_phone && <p className="text-sm font-bold text-accent-600">{booking.rider_phone}</p>}
                         </div>
                       )}
                     </div>
@@ -305,8 +321,13 @@ const NewTrackPage = () => {
                   <div className="space-y-4">
                     {history.map((entry, index) => (
                       <div key={entry.id} className="flex">
-                        <div className="flex flex-col items-center mr-4">
-                          <div className={`w-3 h-3 rounded-full ${index === history.length - 1 ? 'bg-primary-500' : 'bg-gray-300'}`}></div>
+                        <div className="flex flex-col items-center mr-4 relative">
+                          <div className="relative flex items-center justify-center w-3 h-3">
+                            {index === history.length - 1 && (
+                              <div className="absolute inset-0 bg-primary-400 rounded-full animate-ping opacity-75"></div>
+                            )}
+                            <div className={`relative z-10 w-3 h-3 rounded-full ${index === history.length - 1 ? 'bg-primary-500' : 'bg-gray-300'}`}></div>
+                          </div>
                           {index < history.length - 1 && <div className="w-0.5 flex-grow bg-gray-300 mt-1"></div>}
                         </div>
                         <div className="flex-grow pb-6">

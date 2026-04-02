@@ -51,6 +51,25 @@ const AdminBookings = () => {
 
   useEffect(() => {
     fetchBookings();
+
+    const channel = supabase
+      .channel('bookings-insert-listener')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'bookings' },
+        (payload) => {
+          fetchBookings();
+          toast.info('New Booking Received!', {
+            autoClose: false,
+            position: 'bottom-right',
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const filterBookings = useCallback(() => {
@@ -172,10 +191,10 @@ Send proof of payment for confirmation. Thanks! ❤️`;
 Tracking ID: ${selectedBooking.tracking_id}
 Customer: ${selectedBooking.sender_name}
 
-Route: ${pickupAreaName} ➔ ${dropoffAreaName}
+Route: ${pickupAreaName} - ${selectedBooking.pickup_address} ➔ ${dropoffAreaName} - ${selectedBooking.dropoff_address}
 Call the rider: ${selectedBooking.rider_name || 'To be assigned'} (${selectedBooking.rider_phone || 'N/A'})
 
-Live Tracking: https://dolulogistics.com/track?id=${selectedBooking.tracking_id}
+Delivery Timeline: https://dolulogistics.com/track?id=${selectedBooking.tracking_id}
 
 A rider is on the way for your pickup and delivery. Thank you for trusting Dolu!`;
 
@@ -209,8 +228,8 @@ A rider is on the way for your pickup and delivery. Thank you for trusting Dolu!
     setRiderName(booking.rider_name || '');
     setRiderPhone(booking.rider_phone || '');
     setStatusNote('');
-    await fetchBookingHistory(booking.id);
     setShowDetailsModal(true);
+    fetchBookingHistory(booking.id).catch(console.error);
   };
 
   const handleUpdateStatus = async () => {

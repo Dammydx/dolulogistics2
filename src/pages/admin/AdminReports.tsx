@@ -79,9 +79,13 @@ const AdminReports = () => {
     return { totalBookings, delivered, canceled, revenue };
   }, [filteredBookings]);
 
-  const handleDownloadReport = async () => {
-    if (filteredBookings.length === 0) {
-      toast.warning('No bookings to export for the selected month.');
+  const handleDownloadReport = async (onlyDelivered: boolean = false) => {
+    const bookingsToExport = onlyDelivered 
+      ? filteredBookings.filter(b => b.status === 'delivered') 
+      : filteredBookings;
+
+    if (bookingsToExport.length === 0) {
+      toast.warning(`No ${onlyDelivered ? 'delivered ' : ''}bookings to export for the selected month.`);
       return;
     }
 
@@ -96,7 +100,7 @@ const AdminReports = () => {
 
       // Map to columns specifically requested by the user:
       // Date, Tracking ID, Customer, Pickup, Drop-off, Rider, and Status
-      const reportData = filteredBookings.map((booking) => {
+      const reportData = bookingsToExport.map((booking) => {
         const pickupAreaName = booking.pickup_area_id ? areaMap.get(booking.pickup_area_id) : 'Unknown';
         const dropoffAreaName = booking.dropoff_area_id ? areaMap.get(booking.dropoff_area_id) : 'Unknown';
         
@@ -117,10 +121,10 @@ const AdminReports = () => {
 
       // Create Workbook
       const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Monthly Report');
+      XLSX.utils.book_append_sheet(workbook, worksheet, onlyDelivered ? 'Delivered Report' : 'Monthly Report');
 
       // Download
-      XLSX.writeFile(workbook, `Dolu_Report_${selectedMonth}.xlsx`);
+      XLSX.writeFile(workbook, onlyDelivered ? `Dolu_Delivered_Report_${selectedMonth}.xlsx` : `Dolu_Report_${selectedMonth}.xlsx`);
       toast.success('Report downloaded successfully!');
     } catch (err) {
       console.error('Error exporting report:', err);
@@ -222,13 +226,22 @@ const AdminReports = () => {
           <h2 className="text-lg font-semibold text-gray-800">
             Monthly Bookings Table
           </h2>
-          <button
-            onClick={handleDownloadReport}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-          >
-            <Download className="h-4 w-4" />
-            Download Monthly Report
-          </button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button
+              onClick={() => handleDownloadReport(true)}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+            >
+              <Download className="h-4 w-4" />
+              Delivered Only
+            </button>
+            <button
+              onClick={() => handleDownloadReport(false)}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              <Download className="h-4 w-4" />
+              All Reports
+            </button>
+          </div>
         </div>
 
         {filteredBookings.length === 0 ? (

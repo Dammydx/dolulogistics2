@@ -300,6 +300,7 @@ const NewRequestPickupPage = () => {
       });
 
       setTrackingId(newTrackingId);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       setIsSubmitted(true);
       toast.success('Booking created successfully!');
     } catch (error) {
