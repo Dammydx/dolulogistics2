@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { TruckIcon, PackageIcon } from 'lucide-react';
+import { PackageIcon } from 'lucide-react';
+import DispatchBikeIcon from '../../../components/icons/DispatchBikeIcon';
 
 // Hero images
 import pic1 from '../../../assets/images/pic1.png';
@@ -122,7 +123,7 @@ const HeroSection = () => {
                 to="/request-pickup"
                 className="px-6 py-3 bg-accent-500 text-white rounded-md font-medium hover:bg-accent-600 transition-colors flex items-center justify-center"
               >
-                <TruckIcon className="w-5 h-5 mr-2" />
+                <DispatchBikeIcon className="w-5 h-5 mr-2" />
                 Book a Pickup
               </Link>
             </motion.div>

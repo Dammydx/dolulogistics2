@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { Package, Truck, MapPin, Check } from 'lucide-react';
+import { Package, MapPin, Check } from 'lucide-react';
+import DispatchBikeIcon from '../../../components/icons/DispatchBikeIcon';
 
 const steps = [
   {
@@ -13,7 +14,7 @@ const steps = [
     title: 'Swift Collection',
     description:
       'A trained Dolu rider arrives on time, confirms your package details, and picks it up with care.',
-    icon: Truck,
+    icon: DispatchBikeIcon,
     color: 'bg-accent-50 text-accent-500',
   },
   {

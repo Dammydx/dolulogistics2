@@ -1,10 +1,9 @@
 import { motion } from 'framer-motion';
-import { LucideIcon } from 'lucide-react';
 
 type ServiceCardProps = {
   title: string;
   description: string;
-  icon: LucideIcon;
+  icon: React.ElementType;
   color: string;
   bgColor: string;
   delay?: number;

@@ -2,13 +2,13 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import ServiceCard from './components/ServiceCard';
 import {
-  Truck,
   Zap,
   Globe,
   Clock,
   ShoppingBag,
   FileText,
 } from 'lucide-react';
+import DispatchBikeIcon from '../../components/icons/DispatchBikeIcon';
 
 // ✅ LOCAL IMAGE IMPORT
 import frontBranding from '../../assets/images/FRONTBRANDING.png';
@@ -31,7 +31,7 @@ const services = [
   {
     title: 'Errand Services',
     description: 'We handle your daily errands, from grocery pickups to simple personal tasks.',
-    icon: Truck,
+    icon: DispatchBikeIcon,
     color: 'text-amber-500',
     bgColor: 'bg-amber-50',
   },
