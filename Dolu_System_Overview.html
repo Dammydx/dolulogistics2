@@ -89,20 +89,27 @@ hr {
   </style>
 </head>
 <body>
-  <h1>Dolu Logistics - System Explanation &amp; Workflow Guide</h1>
-<p>Welcome to the internal system overview for Dolu Logistics. This document is designed to guide stakeholders, partners, or new developers through the logical flow of the entire application, breaking down both the customer-facing experience and the internal administrative operations.</p>
+  <h1>Dolu Logistics - System Overview &amp; Capabilities (v1.0)</h1>
+<p>An in-depth breakdown of the Dolu Logistics platform. This overview details the core architectural technology powering the ecosystem, maps out the seamless customer booking journey, and outlines the robust administrative tools driving our daily logistics operations.</p>
 <hr>
 <h2>1. System Overview &amp; Technology</h2>
 <p>Dolu Logistics is a modern, responsive web application designed to streamline package pickup, delivery tracking, and dispatch management. </p>
 <ul>
 <li><strong>Frontend:</strong> Built with React, Vite, and Tailwind CSS (providing the sleek &quot;glassmorphism&quot; aesthetic and responsive mobile design).</li>
-<li><strong>Backend &amp; Database:</strong> Powered by Supabase (PostgreSQL), handling real-time data storage, tracking IDs, and administrative authentication.</li>
+<li><strong>PWA Ready:</strong> Implemented as a Progressive Web App (PWA) allowing customers and admins to install the platform directly on their devices for faster access.</li>
+<li><strong>Backend &amp; Database:</strong> Powered by a robust PostgreSQL database, handling real-time data storage, tracking IDs, and administrative authentication.</li>
 <li><strong>Hosting:</strong> Deployed via Vercel for fast, scalable cloud hosting.</li>
 </ul>
 <hr>
 <h2>2. The Customer Experience (Frontend Flow)</h2>
 <p>The public-facing website is designed to be as frictionless as possible for standard users.</p>
-<h3>A. Requesting a Pickup</h3>
+<h3>A. The Public Interface</h3>
+<ul>
+<li><strong>Dynamic Hero Section:</strong> Features an engaging, non-cropped image carousel that immediately highlights the brand.</li>
+<li><strong>Standardized Services:</strong> Clear, interactive representations of core logistics offerings.</li>
+<li><strong>Seamless Contact:</strong> Fully interactive, dual-contact links allowing instant communication via Phone or WhatsApp.</li>
+</ul>
+<h3>B. Requesting a Pickup</h3>
 <ol>
 <li><strong>Initiation:</strong> The user navigates to the Request Pickup page (<code>/request-pickup</code>).</li>
 <li><strong>Form Details:</strong> The user fills in:<ul>
@@ -117,9 +124,10 @@ hr {
 <li><strong>The &quot;Highest-Zone&quot; Rule:</strong> To maintain profitability, the system queries the fixed Base Price for the Pickup Zone and the Drop-off Zone, and naturally applies the <strong>highest</strong> of the two.</li>
 </ul>
 </li>
-<li><strong>Submission:</strong> Upon submission, the order is securely pushed to the Supabase database. The system automatically generates a unique, sequentially accurate Tracking ID (e.g., <code>DL20260401003</code>).</li>
+<li><strong>Submission:</strong> Upon submission, the order is securely pushed to the backend database. The system automatically generates a unique, sequentially accurate Tracking ID (e.g., <code>DL20260401003</code>).</li>
+<li><strong>Confirmation:</strong> After scheduling, the customer is presented with a premium success screen featuring a detailed payment information card.</li>
 </ol>
-<h3>B. Tracking a Parcel</h3>
+<h3>C. Tracking a Parcel</h3>
 <ol>
 <li><strong>The Tracking Page (<code>/track</code>):</strong> The customer inputs their <code>DL</code>-prefixed Tracking ID.</li>
 <li><strong>Status Interface:</strong> The system pulls the live data and displays:<ul>
@@ -134,7 +142,7 @@ hr {
 <p>The Admin section (<code>/admin</code>) is securely protected and acts as the central hub for dispatchers and managers.</p>
 <h3>A. Admin Dashboard</h3>
 <ul>
-<li>Provides a high-level view of active metrics (Pending Deliveries, Revenue, Active Riders) to allow for quick operational pulse-checks.</li>
+<li>Provides a high-level view of active metrics (Pending Deliveries, Revenue, Active Riders) and supports a responsive mobile navigation sidebar for on-the-go management.</li>
 </ul>
 <h3>B. Dispatch Desk</h3>
 <p>The heart of the logistics operation. Here, admins process all incoming customer requests.</p>
@@ -165,7 +173,7 @@ hr {
 </ul>
 <hr>
 <h2>4. Platform Strengths &amp; Value Proposition</h2>
-<p>When reviewing Dolu Logistics with partners or developers, emphasize the following points:</p>
+<p>The Dolu Logistics platform is built to deliver exceptional value. Our core operational strengths include:</p>
 <ol>
 <li><strong>Automation:</strong> Unique tracking IDs and smart pricing engines save immense manual labor.</li>
 <li><strong>Transparency:</strong> Customers always know where their package is and exactly who to call via the robust live-tracking timeline.</li>

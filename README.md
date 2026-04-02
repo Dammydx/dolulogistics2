@@ -1,26 +1,27 @@
 # Dolu Logistics
 
-A modern logistics and delivery platform built for swift, safe, and stress-free parcel delivery — with shipment tracking and smooth customer communication.
+A modern logistics and delivery platform built for swift, safe, and stress-free parcel delivery — featuring real-time shipment tracking, dynamic pricing logic, and smooth customer communication.
 
 ## 🌎 Live Site
 [View Dolu Logistics](https://dolulogistics20.vercel.app/)
 
 ## Features
 
-- Parcel tracking and shipment updates
-- Customer message/contact management
-- Admin dashboard for managing parcels, updates, and messages
-- Fully responsive design for all devices
-- Secure authentication (admin access)
+- **Parcel Tracking:** Step-by-step shipment timeline updates.
+- **Dynamic Pricing Engine:** Calculates delivery costs automatically using highest-zone logic.
+- **Customer Communication:** Integrated WhatsApp/Call links and message management.
+- **Admin Dispatch Desk:** Comprehensive dashboard for managing parcels, updates, and riders.
+- **Progressive Web App (PWA):** Installable on mobile devices.
+- **Secure Authentication:** Protected admin access and granular permissions.
 
 ## Tech Stack
 
-- Frontend: React + Vite
-- Styling: Tailwind CSS
-- Backend/Database: Supabase
-- Animations: Framer Motion
-- Icons: Lucide React
-- Notifications: React Toastify
+- **Frontend:** React + Vite
+- **Styling:** Tailwind CSS
+- **Backend/Database:** PostgreSQL
+- **Animations:** Framer Motion
+- **Icons:** Lucide React
+- **Notifications:** React Toastify
 
 ## Getting Started
 
@@ -29,7 +30,7 @@ A modern logistics and delivery platform built for swift, safe, and stress-free 
    ```bash
    npm install
    ```
-3. Copy `.env.example` to `.env` and add your Supabase credentials  
+3. Copy `.env.example` to `.env` and configure your database connection variables.
 4. Start the development server:
    ```bash
    npm run dev
@@ -37,20 +38,12 @@ A modern logistics and delivery platform built for swift, safe, and stress-free 
 
 ## Documentation
 
-- Database Setup Guide: `docs/setup.md`
-- Admin Guide: `docs/admin_guide.md`
-
-## Contributing
-
-1. Fork the repository  
-2. Create a feature branch  
-3. Commit your changes  
-4. Push to the branch  
-5. Create a Pull Request  
+- **System Overview:** View `Dolu_System_Overview.html` in your browser for a complete platform breakdown.
 
 ## License
 
-MIT
+**Proprietary / All Rights Reserved.**
+This codebase is strictly for internal use by Dolu Logistics. It is not open-source and must not be distributed or copied without express permission.
 
 ## Credits
 

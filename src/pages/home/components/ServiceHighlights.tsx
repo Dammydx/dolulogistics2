@@ -1,35 +1,43 @@
 import { motion } from 'framer-motion';
-import { Zap, Globe, Clock, ShoppingBag } from 'lucide-react';
+import { Zap, Globe, Clock, ShoppingBag, FileText, Truck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const services = [
   {
-    title: 'Swift City Delivery',
-    description:
-      'Fast, reliable delivery across Port Harcourt perfect for urgent parcels and sameday runs.',
-    icon: Zap,
-    color: 'bg-amber-500',
-  },
-  {
-    title: 'Nationwide Delivery',
-    description:
-      'Send packages beyond Port Harcourt with dependable nationwide shipping you can trust.',
-    icon: Globe,
-    color: 'bg-accent-500',
-  },
-  {
-    title: 'Pickup Scheduling',
-    description:
-      'Choose a convenient pickup time and our rider will arrive on schedule stress free.',
+    title: 'Scheduled Delivery',
+    description: 'Book ahead and choose a convenient pickup time that fits your busy schedule.',
     icon: Clock,
     color: 'bg-primary-500',
   },
   {
-    title: 'Business Dispatch Support',
-    description:
-      'Reliable daily dispatch for vendors and SMEs careful handling, clear communication, fair pricing.',
+    title: 'Business Delivery',
+    description: 'Reliable logistics support for vendors and businesses to reach customers on time.',
     icon: ShoppingBag,
     color: 'bg-emerald-500',
+  },
+  {
+    title: 'Errand Services',
+    description: 'We handle your daily errands, from grocery pickups to simple personal tasks.',
+    icon: Truck,
+    color: 'bg-amber-500',
+  },
+  {
+    title: 'Document Delivery',
+    description: 'Secure and confidential delivery for all your important paperwork and documents.',
+    icon: FileText,
+    color: 'bg-blue-500',
+  },
+  {
+    title: 'Express Dispatch',
+    description: 'Priority delivery service for urgent packages that need immediate attention.',
+    icon: Zap,
+    color: 'bg-red-500',
+  },
+  {
+    title: 'Same-Day Delivery',
+    description: 'Guaranteed delivery on the same day for packages within the city limits.',
+    icon: Globe,
+    color: 'bg-accent-500',
   },
 ];
 
@@ -51,7 +59,7 @@ const ServiceHighlights = () => {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {services.map((service, index) => (
             <motion.div
               key={index}

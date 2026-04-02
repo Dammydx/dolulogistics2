@@ -4,6 +4,10 @@ import { MapPin, Phone, Mail, Clock, Send } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { supabase } from '../../lib/supabase';
 
+// Icons
+import phoneIcon from '../../assets/images/phone.png';
+import whatsappIcon from '../../assets/images/whatsapp.png';
+
 const ContactPage = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -84,25 +88,45 @@ const ContactPage = () => {
 
                 <div className="space-y-4">
                   <div className="flex items-start space-x-4">
-                    <div className="bg-primary-50 p-3 rounded-full">
+                    <div className="bg-primary-50 p-3 rounded-full flex-shrink-0">
                       <MapPin className="w-6 h-6 text-primary-500" />
                     </div>
                     <div>
                       <h3 className="font-semibold">Our Location</h3>
-                      <p className="text-gray-600">19b, Ada George Road, Opposite Fathers House, Port Harcourt, Rivers State, Nigeria</p>
+                      <p className="text-gray-600">No. 122 Rumuokwuta-Choba Road Beside Osmosis, Port Harcourt, Rivers State.</p>
                     </div>
                   </div>
 
                   <div className="flex items-start space-x-4">
-                    <div className="bg-primary-50 p-3 rounded-full">
+                    <div className="bg-primary-50 p-3 rounded-full flex-shrink-0">
                       <Phone className="w-6 h-6 text-primary-500" />
                     </div>
-                    <div>
-                      <h3 className="font-semibold">Phone</h3>
-                      <p className="text-gray-600">+234 913 027 8580</p>
-
-                      <h3 className="font-semibold mt-3">WhatsApp</h3>
-                      <p className="text-gray-600">+234 913 027 8580</p>
+                    <div className="w-full">
+                      <h3 className="font-semibold mb-3">Phone & WhatsApp</h3>
+                      <div className="flex flex-col space-y-4">
+                        <div>
+                          <p className="text-gray-800 font-medium">+234 913 027 8580</p>
+                          <div className="flex space-x-3 mt-2">
+                            <a href="tel:+2349130278580" className="text-sm text-gray-700 hover:text-primary-600 font-medium flex items-center gap-1.5 border border-gray-200 bg-gray-50 hover:bg-primary-50 px-3 py-1.5 rounded-full transition-colors">
+                              <img src={phoneIcon} alt="Call" className="w-4 h-4 object-contain" /> Call
+                            </a>
+                            <a href="https://wa.me/2349130278580" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-700 hover:text-green-600 font-medium flex items-center gap-1.5 border border-gray-200 bg-gray-50 hover:bg-green-50 px-3 py-1.5 rounded-full transition-colors">
+                              <img src={whatsappIcon} alt="WhatsApp" className="w-4 h-4 object-contain" /> WhatsApp
+                            </a>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-gray-800 font-medium">+234 813 076 2722</p>
+                          <div className="flex space-x-3 mt-2">
+                            <a href="tel:+2348130762722" className="text-sm text-gray-700 hover:text-primary-600 font-medium flex items-center gap-1.5 border border-gray-200 bg-gray-50 hover:bg-primary-50 px-3 py-1.5 rounded-full transition-colors">
+                              <img src={phoneIcon} alt="Call" className="w-4 h-4 object-contain" /> Call
+                            </a>
+                            <a href="https://wa.me/2348130762722" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-700 hover:text-green-600 font-medium flex items-center gap-1.5 border border-gray-200 bg-gray-50 hover:bg-green-50 px-3 py-1.5 rounded-full transition-colors">
+                              <img src={whatsappIcon} alt="WhatsApp" className="w-4 h-4 object-contain" /> WhatsApp
+                            </a>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -122,9 +146,8 @@ const ContactPage = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold">Business Hours</h3>
-                      <p className="text-gray-600">Monday to Friday: 8:30 AM - 5:00 PM</p>
-                      <p className="text-gray-600">Saturday: 9:00 AM - 5:00 PM</p>
-                      <p className="text-gray-600">Sunday: Closed</p>
+                      <p className="text-gray-600">Monday - Saturday: 7:30 AM – 6:00 PM</p>
+                      <p className="text-gray-600">Sunday: 2:00 PM – 6:00 PM</p>
                     </div>
                   </div>
                 </div>

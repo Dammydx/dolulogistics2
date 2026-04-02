@@ -7,10 +7,7 @@ import {
   Globe,
   Clock,
   ShoppingBag,
-  BoxIcon,
-  ShieldCheck,
-  Building,
-  Warehouse,
+  FileText,
 } from 'lucide-react';
 
 // ✅ LOCAL IMAGE IMPORT
@@ -18,68 +15,46 @@ import frontBranding from '../../assets/images/FRONTBRANDING.png';
 
 const services = [
   {
-    title: 'Swift City Delivery',
-    description:
-      'Fast and reliable delivery across Port Harcourt. Ideal for urgent parcels, documents, and same day runs.',
-    icon: Zap,
-    color: 'text-amber-500',
-    bgColor: 'bg-amber-50',
-  },
-  {
-    title: 'Nationwide Delivery',
-    description:
-      'Send packages beyond Port Harcourt with dependable nationwide shipping, careful handling, and clear updates.',
-    icon: Globe,
-    color: 'text-accent-500',
-    bgColor: 'bg-accent-50',
-  },
-  {
-    title: 'Scheduled Pickups',
-    description:
-      'Book pickups at your convenience. One-time pickups or regular schedules for businesses and frequent shippers.',
+    title: 'Scheduled Delivery',
+    description: 'Book ahead and choose a convenient pickup time that fits your busy schedule.',
     icon: Clock,
     color: 'text-primary-500',
     bgColor: 'bg-primary-50',
   },
   {
-    title: 'Business Dispatch Support',
-    description:
-      'Reliable dispatch for online vendors and SMEs. We help you deliver consistently, communicate clearly, and keep customers happy.',
+    title: 'Business Delivery',
+    description: 'Reliable logistics support for vendors and businesses to reach customers on time.',
     icon: ShoppingBag,
     color: 'text-emerald-500',
     bgColor: 'bg-emerald-50',
   },
   {
-    title: 'Express Document Delivery',
-    description:
-      'Secure delivery for important documents with confirmation on delivery and responsible handling from start to finish.',
-    icon: BoxIcon,
+    title: 'Errand Services',
+    description: 'We handle your daily errands, from grocery pickups to simple personal tasks.',
+    icon: Truck,
+    color: 'text-amber-500',
+    bgColor: 'bg-amber-50',
+  },
+  {
+    title: 'Document Delivery',
+    description: 'Secure and confidential delivery for all your important paperwork and documents.',
+    icon: FileText,
     color: 'text-blue-500',
     bgColor: 'bg-blue-50',
   },
   {
-    title: 'Careful Handling for Fragile Items',
-    description:
-      'Extra care for delicate items with handling protocols designed to protect value and reduce damage risk.',
-    icon: ShieldCheck,
+    title: 'Express Dispatch',
+    description: 'Priority delivery service for urgent packages that need immediate attention.',
+    icon: Zap,
     color: 'text-red-500',
     bgColor: 'bg-red-50',
   },
   {
-    title: 'Corporate Logistics',
-    description:
-      'Tailored delivery support for organizations with regular logistics needs, including bulk movement and structured coordination.',
-    icon: Building,
-    color: 'text-indigo-500',
-    bgColor: 'bg-indigo-50',
-  },
-  {
-    title: 'Storage & Dispatch Coordination',
-    description:
-      'Flexible short-term storage and dispatch coordination to support growing businesses and recurring delivery needs.',
-    icon: Warehouse,
-    color: 'text-fuchsia-500',
-    bgColor: 'bg-fuchsia-50',
+    title: 'Same-Day Delivery',
+    description: 'Guaranteed delivery on the same day for packages within the city limits.',
+    icon: Globe,
+    color: 'text-accent-500',
+    bgColor: 'bg-accent-50',
   },
 ];
 
@@ -100,7 +75,7 @@ const ServicesPage = () => {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
           {services.map((service, index) => (
             <ServiceCard
               key={index}
@@ -128,6 +103,39 @@ const ServicesPage = () => {
             <div className="h-12 w-28 bg-gray-200 rounded opacity-50"></div>
             <div className="h-12 w-36 bg-gray-200 rounded opacity-50"></div>
             <div className="h-12 w-24 bg-gray-200 rounded opacity-50"></div>
+          </div>
+        </motion.div>
+
+        {/* FAQs Component */}
+        <motion.div
+          className="mt-24 max-w-4xl mx-auto bg-white rounded-lg shadow-sm border border-gray-100 p-8 md:p-12"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold mb-3">Frequently Asked Questions</h2>
+            <p className="text-gray-600">Everything you need to know about how our services work.</p>
+          </div>
+          
+          <div className="space-y-6">
+            <div className="border-b border-gray-100 pb-5">
+              <h4 className="text-lg font-semibold text-gray-900 mb-2">How fast is Same-Day Delivery?</h4>
+              <p className="text-gray-600">If booked before our daily cutoff time, your parcel will be picked up and delivered within the same business day anywhere within Port Harcourt city limits.</p>
+            </div>
+            <div className="border-b border-gray-100 pb-5">
+              <h4 className="text-lg font-semibold text-gray-900 mb-2">Can you handle fragile or high-value items?</h4>
+              <p className="text-gray-600">Yes! During booking, you can select 'Fragile' as a tag. Our riders use specialized handling procedures and extra securing materials to ensure safe transit.</p>
+            </div>
+            <div className="border-b border-gray-100 pb-5">
+              <h4 className="text-lg font-semibold text-gray-900 mb-2">Do you offer discounts for wholesale/business vendors?</h4>
+              <p className="text-gray-600">Absolutely. Our Business Delivery support offers tailored pricing, scheduled mass-pickups, and dedicated dispatch lines for SMEs and corporate clients.</p>
+            </div>
+            <div>
+              <h4 className="text-lg font-semibold text-gray-900 mb-2">Is there a package size limit?</h4>
+              <p className="text-gray-600">Our bike fleet handles standard parcels, documents, and lightweight goods. For bulky or extremely heavy items, please contact support beforehand to arrange a dedicated vehicle.</p>
+            </div>
           </div>
         </motion.div>
 

@@ -5,7 +5,6 @@ import { AppSetting, SmsSendMode } from '../../types/database';
 import { Settings, Save, AlertCircle } from 'lucide-react';
 
 const AdminSettings = () => {
-  const [settings, setSettings] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -32,8 +31,6 @@ const AdminSettings = () => {
       (data || []).forEach((s: AppSetting) => {
         settingsMap[s.key] = s.value;
       });
-
-      setSettings(settingsMap);
 
       // Set form fields
       setCustomerCarePhone(settingsMap['customer_care_phone'] || '');

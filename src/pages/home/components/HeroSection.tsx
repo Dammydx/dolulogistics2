@@ -1,11 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { TruckIcon, PackageIcon } from 'lucide-react';
-import doluBike from '../../../images/dolubike.png';
+
+// Hero images
+import pic1 from '../../../assets/images/pic1.png';
+import pic2 from '../../../assets/images/pic2.png';
 
 const HeroSection = () => {
-  const [trackingId, setTrackingId] = useState('');
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const images = [pic1, pic2];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+    }, 10000); // 10 seconds transition
+
+    return () => clearInterval(interval);
+  }, [images.length]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -25,13 +37,6 @@ const HeroSection = () => {
       opacity: 1,
       transition: { duration: 0.6, ease: 'easeOut' },
     },
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (trackingId.trim()) {
-      window.location.href = `/track?id=${trackingId}`;
-    }
   };
 
   return (
@@ -56,12 +61,25 @@ const HeroSection = () => {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.4 }}
             >
+              {/* Invisible spacer to maintain natural aspect ratio of the images without fixed heights */}
               <img
-              src={doluBike}
-              alt="Dolu Logistics delivery rider on bike"
-              className="w-full h-auto rounded-lg"
-              loading="eager"
-            />
+                src={images[0]}
+                alt="layout spacer"
+                className="w-full h-auto invisible"
+                aria-hidden="true"
+              />
+
+              {images.map((img, index) => (
+                <img
+                  key={index}
+                  src={img}
+                  alt={`Dolu Logistics Hero ${index + 1}`}
+                  className={`absolute top-0 left-0 w-full h-full object-contain transition-opacity duration-1000 ease-in-out ${
+                    index === currentImageIndex ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  loading={index === 0 ? "eager" : "lazy"}
+                />
+              ))}
             </motion.div>
           </motion.div>
 

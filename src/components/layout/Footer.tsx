@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Phone, MapPin } from 'lucide-react';
 
-// ✅ Logo import
+// ✅ Logo & Icons import
 import doluLogo from '../../assets/images/dolu-logo.png';
+import phoneIcon from '../../assets/images/phone.png';
+import whatsappIcon from '../../assets/images/whatsapp.png';
 
 const Footer = () => {
   const year = new Date().getFullYear();
@@ -78,12 +80,14 @@ const Footer = () => {
 
           {/* ================= SERVICES ================= */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Services</h3>
+            <h3 className="text-lg font-semibold mb-4">Services Offered</h3>
             <ul className="space-y-2 text-gray-300">
-              <li>City Delivery</li>
-              <li>Nationwide Delivery</li>
-              <li>Scheduled Pickups</li>
-              <li>Business Dispatch</li>
+              <li>Scheduled Delivery</li>
+              <li>Business Delivery</li>
+              <li>Errand Services</li>
+              <li>Document Delivery</li>
+              <li>Express Dispatch</li>
+              <li>Same-Day Delivery</li>
             </ul>
           </div>
 
@@ -92,12 +96,35 @@ const Footer = () => {
             <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <MapPin className="h-12 w-12 text-primary-500" />
-                <span className="text-gray-300"> 19b, Ada George Road, Opposite Fathers House, Port Harcourt, Rivers State, Nigeria</span>
+                <MapPin className="h-6 w-6 text-primary-500 mt-1 flex-shrink-0" />
+                <span className="text-gray-300">No. 122 Rumuokwuta-Choba Road Beside Osmosis, Port Harcourt, Rivers State.</span>
               </li>
-              <li className="flex items-center space-x-3">
-                <Phone className="h-5 w-5 text-primary-500" />
-                <span className="text-gray-300">+234 913 027 8580</span>
+              <li className="flex items-start space-x-3">
+                <Phone className="h-5 w-5 text-primary-500 mt-1 flex-shrink-0" />
+                <div className="flex flex-col space-y-4 text-gray-300 w-full">
+                  <div>
+                    <span className="block mb-1 text-white font-medium">+234 913 027 8580</span>
+                    <div className="flex space-x-4 text-sm mt-1">
+                      <a href="tel:+2349130278580" className="hover:text-primary-400 transition-colors flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-full">
+                        <img src={phoneIcon} alt="Call" className="w-4 h-4 object-contain" /> Call
+                      </a>
+                      <a href="https://wa.me/2349130278580" target="_blank" rel="noopener noreferrer" className="hover:text-green-400 transition-colors flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-full">
+                        <img src={whatsappIcon} alt="WhatsApp" className="w-4 h-4 object-contain" /> WhatsApp
+                      </a>
+                    </div>
+                  </div>
+                  <div>
+                    <span className="block mb-1 text-white font-medium">+234 813 076 2722</span>
+                    <div className="flex space-x-4 text-sm mt-1">
+                      <a href="tel:+2348130762722" className="hover:text-primary-400 transition-colors flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-full">
+                        <img src={phoneIcon} alt="Call" className="w-4 h-4 object-contain" /> Call
+                      </a>
+                      <a href="https://wa.me/2348130762722" target="_blank" rel="noopener noreferrer" className="hover:text-green-400 transition-colors flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-full">
+                        <img src={whatsappIcon} alt="WhatsApp" className="w-4 h-4 object-contain" /> WhatsApp
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </li>
             </ul>
           </div>
