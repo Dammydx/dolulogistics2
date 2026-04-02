@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { supabase } from '../../lib/supabase';
 import { MessageTemplate, MessageTemplateType } from '../../types/database';
-import { FileText, Edit2, Trash2, Save } from 'lucide-react';
+import { FileText, Edit2, Save } from 'lucide-react';
 
 const AdminTemplates = () => {
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);

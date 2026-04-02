@@ -72,6 +72,12 @@ const AdminPricing = () => {
   const [editingRates, setEditingRates] = useState<Record<string, { price: string; eta: string }>>({});
   const [savingRateId, setSavingRateId] = useState<string | null>(null);
 
+  // ─── Zone Form State ─────────────────────────────────────
+  const [showZoneForm, setShowZoneForm] = useState(false);
+  const [newZoneName, setNewZoneName] = useState('');
+  const [newZonePrice, setNewZonePrice] = useState('');
+  const [isSubmittingZone, setIsSubmittingZone] = useState(false);
+
   // ─── Addon Form State ────────────────────────────────────
   const [showAddonForm, setShowAddonForm] = useState(false);
   const [editingAddonId, setEditingAddonId] = useState<string | null>(null);
@@ -241,6 +247,59 @@ const AdminPricing = () => {
     setAreaZoneId('');
     setEditingAreaId(null);
     setShowAreaForm(false);
+  };
+
+  // ─── Zone Creation ───────────────────────────────────────
+
+  const handleCreateZone = async () => {
+    if (!newZoneName.trim() || !newZonePrice.trim()) {
+      toast.error('Please enter a zone name and base price');
+      return;
+    }
+
+    const price = parseFloat(newZonePrice);
+    if (isNaN(price) || price < 0) {
+      toast.error('Please enter a valid positive price');
+      return;
+    }
+
+    try {
+      setIsSubmittingZone(true);
+
+      const cityId = zones.length > 0 ? zones[0].city_id : null;
+      if (!cityId) {
+        toast.error('No city assigned, cannot create zone.');
+        return;
+      }
+
+      // Step 1: Insert the zone (Fires postgres trigger that creates the matrix lines defaulted to 0)
+      const { data: newZoneData, error: zoneError } = await supabase
+        .from('location_zones')
+        .insert([{ city_id: cityId, name: newZoneName.trim(), active: true }])
+        .select()
+        .single();
+
+      if (zoneError) throw zoneError;
+
+      // Step 2: Set the actual base price for the new zone
+      const { error: rateError } = await supabase
+        .from('pricing_zone_rates')
+        .update({ base_price: price })
+        .eq('to_zone_id', newZoneData.id);
+
+      if (rateError) throw rateError;
+
+      toast.success('Zone created successfully');
+      setNewZoneName('');
+      setNewZonePrice('');
+      setShowZoneForm(false);
+      await fetchData();
+    } catch (err: any) {
+      console.error('Error creating zone:', err);
+      toast.error('Failed to create zone');
+    } finally {
+      setIsSubmittingZone(false);
+    }
   };
 
   // ─── Zone Rate Editing ───────────────────────────────────
@@ -676,6 +735,66 @@ const AdminPricing = () => {
         ═══════════════════════════════════════════════════════ */}
         {activeTab === 'zones' && (
           <div className="p-6">
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+              {!showZoneForm && (
+                <button
+                  onClick={() => setShowZoneForm(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add New Zone
+                </button>
+              )}
+            </div>
+
+            {showZoneForm && (
+              <div className="bg-blue-50 rounded-lg p-5 mb-6 border border-blue-200">
+                <h3 className="font-semibold text-gray-900 mb-4">Add New Zone</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Zone Name *</label>
+                    <input
+                      type="text"
+                      value={newZoneName}
+                      onChange={(e) => setNewZoneName(e.target.value)}
+                      placeholder="e.g., Zone E"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Base Price (₦) *</label>
+                    <input
+                      type="number"
+                      value={newZonePrice}
+                      onChange={(e) => setNewZonePrice(e.target.value)}
+                      placeholder="e.g., 5000"
+                      min="0"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="flex items-end gap-2">
+                    <button
+                      onClick={handleCreateZone}
+                      disabled={isSubmittingZone}
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 font-medium text-sm"
+                    >
+                      {isSubmittingZone ? 'Saving...' : 'Add Zone'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowZoneForm(false);
+                        setNewZoneName('');
+                        setNewZonePrice('');
+                      }}
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 text-sm"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
               <p className="text-sm text-blue-900">
                 <strong>How it works:</strong> Each zone has a base delivery rate. When a customer

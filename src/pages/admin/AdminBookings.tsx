@@ -57,7 +57,7 @@ const AdminBookings = () => {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'bookings' },
-        (payload) => {
+        () => {
           fetchBookings();
           toast.info('New Booking Received!', {
             autoClose: false,
