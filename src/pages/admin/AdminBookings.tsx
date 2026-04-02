@@ -40,6 +40,8 @@ const AdminBookings = () => {
   const [riderPhone, setRiderPhone] = useState('');
   const [updatingBookingId, setUpdatingBookingId] = useState<string | null>(null);
   const [selectedItemCategoryName, setSelectedItemCategoryName] = useState<string>('');
+  const [selectedPickupAreaName, setSelectedPickupAreaName] = useState<string>('');
+  const [selectedDropoffAreaName, setSelectedDropoffAreaName] = useState<string>('');
 
   const statuses: BookingStatus[] = [
     'pending',
@@ -230,6 +232,8 @@ A rider is on the way for your pickup and delivery. Thank you for trusting Dolu!
     setRiderPhone(booking.rider_phone || '');
     setStatusNote('');
     setSelectedItemCategoryName('');
+    setSelectedPickupAreaName('');
+    setSelectedDropoffAreaName('');
     setShowDetailsModal(true);
     fetchBookingHistory(booking.id).catch(console.error);
 
@@ -245,6 +249,32 @@ A rider is on the way for your pickup and delivery. Thank you for trusting Dolu!
       } catch (err) {
         console.error('Error fetching item category:', err);
         setSelectedItemCategoryName('Unknown');
+      }
+    }
+
+    // Fetch area names
+    if (booking.pickup_area_id) {
+      try {
+        const { data: area } = await supabase
+          .from('locations_areas')
+          .select('name')
+          .eq('id', booking.pickup_area_id)
+          .single();
+        setSelectedPickupAreaName(area?.name || '');
+      } catch (err) {
+        console.error('Error fetching pickup area:', err);
+      }
+    }
+    if (booking.dropoff_area_id) {
+      try {
+        const { data: area } = await supabase
+          .from('locations_areas')
+          .select('name')
+          .eq('id', booking.dropoff_area_id)
+          .single();
+        setSelectedDropoffAreaName(area?.name || '');
+      } catch (err) {
+        console.error('Error fetching dropoff area:', err);
       }
     }
   };
@@ -809,6 +839,14 @@ A rider is on the way for your pickup and delivery. Thank you for trusting Dolu!
                   Pickup Location
                 </h3>
                 <div className="space-y-2 text-sm">
+                  {selectedPickupAreaName && (
+                    <p>
+                      <span className="text-gray-600">Zone/Area:</span>
+                      <span className="font-semibold text-blue-700 ml-2 bg-blue-50 px-2 py-0.5 rounded">
+                        {selectedPickupAreaName}
+                      </span>
+                    </p>
+                  )}
                   <p>
                     <span className="text-gray-600">Address:</span>
                     <span className="font-medium text-gray-900 ml-2">
@@ -876,6 +914,14 @@ A rider is on the way for your pickup and delivery. Thank you for trusting Dolu!
                   Dropoff Location
                 </h3>
                 <div className="space-y-2 text-sm">
+                  {selectedDropoffAreaName && (
+                    <p>
+                      <span className="text-gray-600">Zone/Area:</span>
+                      <span className="font-semibold text-green-700 ml-2 bg-green-50 px-2 py-0.5 rounded">
+                        {selectedDropoffAreaName}
+                      </span>
+                    </p>
+                  )}
                   <p>
                     <span className="text-gray-600">Address:</span>
                     <span className="font-medium text-gray-900 ml-2">
