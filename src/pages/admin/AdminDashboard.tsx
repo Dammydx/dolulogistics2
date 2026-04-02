@@ -13,6 +13,7 @@ import {
   Package,
   XCircle,
   AlertCircle,
+  AlertTriangle,
   TrendingUp,
   Eye,
   LucideIcon,
@@ -191,6 +192,31 @@ const AdminDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Action Required: Confirmed bookings needing riders */}
+      {stats.confirmed > 0 && (
+        <div className="bg-amber-50 border-2 border-amber-400 rounded-lg p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3 flex-1">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                <AlertTriangle className="h-6 w-6 text-amber-600" />
+              </div>
+            </div>
+            <div>
+              <h3 className="font-bold text-amber-800 text-base">⚡ Action Required: {stats.confirmed} Confirmed Booking{stats.confirmed > 1 ? 's' : ''} Awaiting Dispatch</h3>
+              <p className="text-amber-700 text-sm mt-0.5">
+                Assign a rider and change status to <strong>"In Progress"</strong> to dispatch.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/admin/bookings"
+            className="flex-shrink-0 px-5 py-2.5 bg-amber-500 text-white rounded-lg font-semibold hover:bg-amber-600 transition-colors text-sm whitespace-nowrap"
+          >
+            Go to Dispatch Desk →
+          </Link>
+        </div>
+      )}
 
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
         <div className="border-b border-gray-200 p-6">

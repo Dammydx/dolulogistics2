@@ -113,17 +113,7 @@ const Footer = () => {
                       </a>
                     </div>
                   </div>
-                  <div>
-                    <span className="block mb-1 text-white font-medium">+234 813 076 2722</span>
-                    <div className="flex space-x-4 text-sm mt-1">
-                      <a href="tel:+2348130762722" className="hover:text-primary-400 transition-colors flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-full">
-                        <img src={phoneIcon} alt="Call" className="w-4 h-4 object-contain" /> Call
-                      </a>
-                      <a href="https://wa.me/2348130762722" target="_blank" rel="noopener noreferrer" className="hover:text-green-400 transition-colors flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-full">
-                        <img src={whatsappIcon} alt="WhatsApp" className="w-4 h-4 object-contain" /> WhatsApp
-                      </a>
-                    </div>
-                  </div>
+
                 </div>
               </li>
             </ul>

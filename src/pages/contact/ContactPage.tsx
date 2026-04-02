@@ -115,17 +115,7 @@ const ContactPage = () => {
                             </a>
                           </div>
                         </div>
-                        <div>
-                          <p className="text-gray-800 font-medium">+234 813 076 2722</p>
-                          <div className="flex space-x-3 mt-2">
-                            <a href="tel:+2348130762722" className="text-sm text-gray-700 hover:text-primary-600 font-medium flex items-center gap-1.5 border border-gray-200 bg-gray-50 hover:bg-primary-50 px-3 py-1.5 rounded-full transition-colors">
-                              <img src={phoneIcon} alt="Call" className="w-4 h-4 object-contain" /> Call
-                            </a>
-                            <a href="https://wa.me/2348130762722" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-700 hover:text-green-600 font-medium flex items-center gap-1.5 border border-gray-200 bg-gray-50 hover:bg-green-50 px-3 py-1.5 rounded-full transition-colors">
-                              <img src={whatsappIcon} alt="WhatsApp" className="w-4 h-4 object-contain" /> WhatsApp
-                            </a>
-                          </div>
-                        </div>
+
                       </div>
                     </div>
                   </div>

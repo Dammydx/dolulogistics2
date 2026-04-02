@@ -854,7 +854,7 @@ const NewRequestPickupPage = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Additional Notes (Optional)
+                        Parcel Description (Optional)
                       </label>
                       <textarea
                         value={itemNotes}

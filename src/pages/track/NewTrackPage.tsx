@@ -16,12 +16,13 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
-import { Package, Search, AlertTriangle, Phone, MessageCircle, MapPin, Calendar, User } from 'lucide-react';
+import { Package, Search, AlertTriangle, Phone, MessageCircle, MapPin, Calendar, User, Copy } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { fetchBookingByTrackingId, fetchBookingHistory, getStatusLabel, getStatusColor, getCustomerStatusLabel } from '../../utils/bookings';
 import { getAreaName } from '../../utils/locations';
 import { formatPrice } from '../../utils/pricing';
 import type { Booking, BookingStatusHistory } from '../../types/database';
+import { supabase } from '../../lib/supabase';
 
 const NewTrackPage = () => {
   const location = useLocation();
@@ -35,6 +36,7 @@ const NewTrackPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [pickupAreaName, setPickupAreaName] = useState('');
   const [dropoffAreaName, setDropoffAreaName] = useState('');
+  const [itemCategoryName, setItemCategoryName] = useState('');
 
   // Auto-search if tracking ID in URL
   useEffect(() => {
@@ -78,6 +80,23 @@ const NewTrackPage = () => {
       if (bookingData.dropoff_area_id) {
         const name = await getAreaName(bookingData.dropoff_area_id);
         setDropoffAreaName(name);
+      }
+
+      // Fetch item category name
+      if (bookingData.item_category_id) {
+        try {
+          const { data: category } = await supabase
+            .from('item_categories')
+            .select('name')
+            .eq('id', bookingData.item_category_id)
+            .single();
+          setItemCategoryName(category?.name || 'Unknown');
+        } catch (err) {
+          console.error('Error fetching item category:', err);
+          setItemCategoryName('Unknown');
+        }
+      } else {
+        setItemCategoryName('');
       }
     } catch (err) {
       console.error('Error fetching booking:', err);
@@ -286,11 +305,45 @@ const NewTrackPage = () => {
                           <div className="absolute -left-[24px] top-1.5 w-2.5 h-2.5 rounded-full ring-4 ring-gray-50 bg-accent-500 z-10"></div>
                           <p className="text-xs font-semibold uppercase tracking-wider text-accent-500 mb-1">Rider</p>
                           {booking.rider_name && <p className="font-medium text-gray-900">{booking.rider_name}</p>}
-                          {booking.rider_phone && <p className="text-sm font-bold text-accent-600">{booking.rider_phone}</p>}
+                          {booking.rider_phone && (
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-bold text-accent-600">{booking.rider_phone}</p>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(booking.rider_phone || '').then(() => {
+                                    toast.success('Rider number copied!');
+                                  }).catch(() => {
+                                    toast.error('Failed to copy');
+                                  });
+                                }}
+                                className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-accent-100 hover:bg-accent-200 text-accent-600 transition-colors"
+                                title="Copy rider number"
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
                   </div>
+
+                  {/* Item Category */}
+                  {itemCategoryName && (
+                    <div className="bg-purple-50 rounded-lg p-4">
+                      <h3 className="font-semibold text-lg mb-2 flex items-center">
+                        <Package className="w-5 h-5 mr-2 text-purple-500" />
+                        Item Category
+                      </h3>
+                      <p className="font-semibold text-purple-700 text-base">{itemCategoryName}</p>
+                      {booking.item_notes && (
+                        <div className="mt-2 bg-white rounded-md p-3 border border-purple-100">
+                          <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Parcel Description</p>
+                          <p className="text-gray-800 text-sm">{booking.item_notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Price Info */}
                   <div className="bg-gray-50 rounded-lg p-4">

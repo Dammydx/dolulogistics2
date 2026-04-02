@@ -39,6 +39,7 @@ const AdminBookings = () => {
   const [riderName, setRiderName] = useState('');
   const [riderPhone, setRiderPhone] = useState('');
   const [updatingBookingId, setUpdatingBookingId] = useState<string | null>(null);
+  const [selectedItemCategoryName, setSelectedItemCategoryName] = useState<string>('');
 
   const statuses: BookingStatus[] = [
     'pending',
@@ -228,8 +229,24 @@ A rider is on the way for your pickup and delivery. Thank you for trusting Dolu!
     setRiderName(booking.rider_name || '');
     setRiderPhone(booking.rider_phone || '');
     setStatusNote('');
+    setSelectedItemCategoryName('');
     setShowDetailsModal(true);
     fetchBookingHistory(booking.id).catch(console.error);
+
+    // Fetch item category name
+    if (booking.item_category_id) {
+      try {
+        const { data: category } = await supabase
+          .from('item_categories')
+          .select('name')
+          .eq('id', booking.item_category_id)
+          .single();
+        setSelectedItemCategoryName(category?.name || 'Unknown');
+      } catch (err) {
+        console.error('Error fetching item category:', err);
+        setSelectedItemCategoryName('Unknown');
+      }
+    }
   };
 
   const handleUpdateStatus = async () => {
@@ -877,28 +894,45 @@ A rider is on the way for your pickup and delivery. Thank you for trusting Dolu!
               </div>
 
               {/* Item Info */}
-              <div>
+              <div className="bg-purple-50 border-l-4 border-purple-500 rounded-lg p-4">
                 <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                   <PackageIcon className="h-5 w-5 text-purple-600" />
-                  Item Information
+                  Item Category
                 </h3>
                 <div className="space-y-2 text-sm">
                   <p>
                     <span className="text-gray-600">Category:</span>
-                    <span className="font-medium text-gray-900 ml-2">
-                      {selectedBooking.item_category_id || 'N/A'}
+                    <span className="font-semibold text-purple-700 ml-2 text-base">
+                      {selectedItemCategoryName || 'Loading...'}
                     </span>
                   </p>
                   {selectedBooking.item_notes && (
-                    <p>
-                      <span className="text-gray-600">Notes:</span>
-                      <span className="font-medium text-gray-900 ml-2">
+                    <div className="mt-2 bg-white rounded-md p-3 border border-purple-100">
+                      <span className="text-gray-600 block text-xs uppercase tracking-wider mb-1">Parcel Description</span>
+                      <span className="font-medium text-gray-900">
                         {selectedBooking.item_notes}
                       </span>
-                    </p>
+                    </div>
                   )}
                 </div>
               </div>
+
+              {/* Confirmed Reminder Banner */}
+              {selectedBooking.status === 'confirmed' && !selectedBooking.rider_name && (
+                <div className="bg-amber-50 border-2 border-amber-400 rounded-lg p-4 flex items-start gap-3 animate-pulse">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-amber-800 text-sm">⚡ Action Required: Assign Rider & Set In Progress</h4>
+                    <p className="text-amber-700 text-sm mt-1">
+                      This booking has been <strong>confirmed</strong>. Please assign a rider below and update the status to <strong>"In Progress"</strong> to dispatch the delivery.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Pricing */}
               <div className="bg-gray-50 rounded-lg p-4">
