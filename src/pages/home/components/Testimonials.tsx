@@ -80,12 +80,13 @@ const Testimonials = () => {
                 "{testimonial.content}"
               </p>
 
-              <div className="flex items-center">
-                <img
-                  src={testimonial.avatar}
-                  alt={testimonial.name}
-                  className="w-12 h-12 rounded-full mr-4 object-cover"
-                />
+              <div className="flex items-center mt-2">
+                <div className="relative w-12 h-12 mr-4 flex-shrink-0">
+                  <span className="absolute inset-0 rounded-full bg-primary-500/40 animate-ping-subtle"></span>
+                  <div className="relative flex h-full w-full items-center justify-center rounded-full bg-primary-500 text-white font-bold text-lg shadow-sm">
+                    {testimonial.name.charAt(0)}
+                  </div>
+                </div>
                 <div>
                   <h4 className="font-semibold">{testimonial.name}</h4>
                   <p className="text-sm text-gray-600">

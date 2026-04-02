@@ -136,7 +136,7 @@ const Footer = () => {
             © {year} Dolu Logistics • Coded by DevWave
           </p>
           <Link to="/admin" className="text-sm text-gray-400 mt-3 md:mt-0 hover:text-gray-300">
-            Admin
+            *****
           </Link>
         </div>
       </div>
