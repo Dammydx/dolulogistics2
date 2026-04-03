@@ -286,6 +286,7 @@ const TrackingMap = ({ pickupAreaName, dropoffAreaName, status }: TrackingMapPro
                   color: config.routeColor,
                   weight: status === 'in_progress' ? 5 : 2.5,
                   opacity: status === 'in_progress' ? 0.95 : 0.6,
+                  dashArray: status === 'in_progress' ? '12' : 'none',
                   className: status === 'in_progress' ? 'flowing-route' : '',
                 }}
               />

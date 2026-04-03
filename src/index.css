@@ -27,9 +27,9 @@
   }
 }
 
-.flowing-route {
+path.flowing-route {
   stroke-dasharray: 12 !important;
-  animation: dash-flow 0.8s linear infinite reverse;
+  animation: dash-flow 0.8s linear infinite !important;
 }
 
 @keyframes dash-flow {
