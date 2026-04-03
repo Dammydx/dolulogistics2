@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { MapPin, Navigation, CheckCircle2 } from 'lucide-react';
 import { getAreaCoordinates } from '../../utils/areaCoordinates';
@@ -14,7 +14,7 @@ L.Icon.Default.mergeOptions({
 });
 
 // Custom SVG drop pin marker
-const createIcon = (color: string, pulse: boolean = false, label?: string) => {
+const createIcon = (color: string, pulse: boolean = false, label?: string, isLarge: boolean = false) => {
   const hex = color.replace('#', '');
   const r = parseInt(hex.substring(0, 2), 16);
   const g = parseInt(hex.substring(2, 4), 16);
@@ -22,7 +22,7 @@ const createIcon = (color: string, pulse: boolean = false, label?: string) => {
   const rgb = `${r}, ${g}, ${b}`;
 
   const pulseHtml = pulse 
-    ? `<div class="absolute tracking-pin-pulse" style="--pulse-color: ${rgb}; width: 14px; height: 14px; border-radius: 50%; background: ${color}; bottom: -4px; left: 9px; opacity: 0.6; z-index: -1;"></div>`
+    ? `<div class="absolute ${isLarge ? 'tracking-pin-pulse-large' : 'tracking-pin-pulse'}" style="--pulse-color: ${rgb}; width: 14px; height: 14px; border-radius: 50%; background: ${color}; bottom: -4px; left: 9px; opacity: 0.6; z-index: -1;"></div>`
     : '';
 
   const labelHtml = label 
@@ -67,12 +67,24 @@ const createDotIcon = (color: string, delay: number) => {
   });
 };
 
-// Auto-fit map bounds
-const FitBounds = ({ bounds }: { bounds: L.LatLngBoundsExpression }) => {
+// Map controller for auto-zoom and bounds
+const MapController = ({ 
+  bounds, 
+  activeMarkerPos 
+}: { 
+  bounds: L.LatLngBoundsExpression, 
+  activeMarkerPos: L.LatLng | null 
+}) => {
   const map = useMap();
   useEffect(() => {
-    map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
-  }, [map, bounds]);
+    if (activeMarkerPos) {
+      // Zoom into the marker to see the address clearly on mobile
+      map.setView(activeMarkerPos, 16, { animate: true });
+    } else {
+      // Fit both markers when no popup is open
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14, animate: true });
+    }
+  }, [map, bounds, activeMarkerPos]);
   return null;
 };
 
@@ -97,6 +109,7 @@ interface TrackingMapProps {
 
 const TrackingMap = ({ pickupAreaName, dropoffAreaName, status, pickupAddress, dropoffAddress }: TrackingMapProps) => {
   const [isCardExpanded, setIsCardExpanded] = useState(true);
+  const [activeMarkerPos, setActiveMarkerPos] = useState<L.LatLng | null>(null);
 
   const pickupCoord = getAreaCoordinates(pickupAreaName);
   const dropoffCoord = getAreaCoordinates(dropoffAreaName);
@@ -156,7 +169,7 @@ const TrackingMap = ({ pickupAreaName, dropoffAreaName, status, pickupAddress, d
       dropoffColor: '#10B981',
       pickupPulse: false,
       dropoffPulse: true,
-      showRoute: true,
+      showRoute: false,
       routeColor: '#10B981',
       label: 'Delivered',
       themeColor: '#10B981',
@@ -196,6 +209,15 @@ const TrackingMap = ({ pickupAreaName, dropoffAreaName, status, pickupAddress, d
       <style>{`
         .leaflet-grab { cursor: grab; }
         .leaflet-dragging .leaflet-grab { cursor: grabbing; }
+        .custom-address-popup .leaflet-popup-content-wrapper {
+          border-radius: 1rem;
+          padding: 0;
+          overflow: hidden;
+        }
+        .custom-address-popup .leaflet-popup-content {
+          margin: 0;
+          width: 250px !important;
+        }
       `}</style>
 
       {/* Map Section Header */}
@@ -217,7 +239,7 @@ const TrackingMap = ({ pickupAreaName, dropoffAreaName, status, pickupAddress, d
         {/* Map Container */}
         <div className="relative flex-1 min-h-[350px] md:min-h-[450px]">
           <MapContainer
-            center={bounds[0]}
+            center={pickupLatLng}
             zoom={13}
             style={{ 
               height: '100%', 
@@ -233,7 +255,7 @@ const TrackingMap = ({ pickupAreaName, dropoffAreaName, status, pickupAddress, d
             boxZoom={false}
             keyboard={false}
           >
-            <FitBounds bounds={bounds} />
+            <MapController bounds={bounds} activeMarkerPos={activeMarkerPos} />
             <TileLayer
               url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
             />
@@ -242,7 +264,7 @@ const TrackingMap = ({ pickupAreaName, dropoffAreaName, status, pickupAddress, d
             <div className={`absolute top-3 right-3 z-[1001] transition-all duration-300 origin-top-right ${
               isCardExpanded ? 'w-[140px] md:w-[220px]' : 'w-9 h-9'
             }`}>
-              <div className={`bg-white/90 backdrop-blur-xl shadow-2xl border border-white/20 rounded-2xl overflow-hidden ring-1 ring-black/5 transition-all ${
+              <div className={`bg-white/40 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] border border-white/40 rounded-2xl overflow-hidden ring-1 ring-black/5 transition-all ${
                 isCardExpanded ? 'p-3 md:p-5' : 'p-0 h-9 w-9 flex items-center justify-center'
               }`}>
                 {isCardExpanded ? (
@@ -250,41 +272,54 @@ const TrackingMap = ({ pickupAreaName, dropoffAreaName, status, pickupAddress, d
                     <div className="flex items-center justify-between mb-3 md:mb-4">
                       <div className="flex items-center gap-1">
                         <div className="w-1 md:w-1.5 h-1 md:h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
-                        <span className="text-[6px] md:text-[9px] font-black text-gray-400 uppercase tracking-[0.1em] md:tracking-[0.2em]">Route Details</span>
+                        <span className="text-[6px] md:text-[9px] font-black text-gray-500 uppercase tracking-widest">Route Details</span>
                       </div>
                       <button 
                         onClick={() => setIsCardExpanded(false)}
-                        className="p-0.5 md:p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-1 hover:bg-white/20 rounded-lg transition-colors group"
                       >
-                        <svg className="w-2.5 h-2.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+                        <svg className="w-2.5 h-2.5 text-gray-500 group-hover:text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M19 9l-7 7-7-7" /></svg>
                       </button>
                     </div>
                     
-                    <div className="relative pl-2 md:pl-3 border-l border-dashed border-gray-100 space-y-3 md:space-y-4">
-                      <div className="absolute -left-[3.5px] top-0 w-1.5 h-1.5 rounded-full bg-blue-500"></div>
-                      <div className="absolute -left-[3.5px] bottom-0 w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                    <div className="relative pl-2 md:pl-3 border-l border-dashed border-gray-400/30 space-y-3 md:space-y-4">
+                      <div className="absolute -left-[3.5px] top-0 w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
+                      <div className="absolute -left-[3.5px] bottom-0 w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
                       
                       <div>
-                        <div className="text-[6px] text-gray-400 uppercase font-black mb-0.5">Origin</div>
-                        <div className="text-[8px] md:text-[11px] font-black text-gray-900 leading-tight truncate">{pickupAreaName}</div>
+                        <div className="text-[6px] text-gray-500 uppercase font-black mb-0.5 tracking-tighter">Origin</div>
+                        <div className="text-[8px] md:text-xs font-black text-gray-900 leading-tight truncate tracking-tighter">{pickupAreaName}</div>
                       </div>
                       <div>
-                        <div className="text-[6px] text-gray-400 uppercase font-black mb-0.5">Dest.</div>
-                        <div className="text-[8px] md:text-[11px] font-black text-gray-900 leading-tight truncate">{dropoffAreaName}</div>
+                        <div className="text-[6px] text-gray-500 uppercase font-black mb-0.5 tracking-tighter">Dest.</div>
+                        <div className="text-[8px] md:text-xs font-black text-gray-900 leading-tight truncate tracking-tighter">{dropoffAreaName}</div>
                       </div>
                     </div>
                   </>
                 ) : (
                   <button 
                     onClick={() => setIsCardExpanded(true)}
-                    className="w-full h-full flex items-center justify-center bg-white hover:bg-gray-50 transition-colors"
+                    className="w-full h-full flex items-center justify-center bg-white/20 hover:bg-white/40 transition-colors"
                     title="Show details"
                   >
-                    <svg className="w-3.5 h-3.5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" /></svg>
+                    <svg className="w-3.5 h-3.5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 15l7-7 7 7" /></svg>
                   </button>
                 )}
               </div>
             </div>
+
+            {/* Damp Guiding Line (Dashed) */}
+            {status !== 'pending' && status !== 'confirmed' && status !== 'cancelled' && (
+              <Polyline
+                positions={[pickupLatLng, dropoffLatLng]}
+                pathOptions={{
+                  color: config.routeColor,
+                  weight: 2.5,
+                  opacity: 0.25,
+                  dashArray: '5, 12'
+                }}
+              />
+            )}
 
             {/* Flowing Animated Dots */}
             {routePoints.map((point, index) => (
@@ -298,12 +333,16 @@ const TrackingMap = ({ pickupAreaName, dropoffAreaName, status, pickupAddress, d
             {/* Pickup Marker */}
             <Marker
               position={pickupLatLng}
-              icon={createIcon(config.pickupColor, true, pickupAreaName)}
+              icon={createIcon(config.pickupColor, config.pickupPulse, pickupAreaName, status === 'pending' || status === 'confirmed')}
+              eventHandlers={{
+                popupopen: (e) => setActiveMarkerPos(e.target.getLatLng()),
+                popupclose: () => setActiveMarkerPos(null),
+              }}
             >
-              <Popup className="custom-address-popup">
-                <div className="p-1">
-                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Pickup Address</div>
-                  <div className="text-sm font-bold text-gray-900">{pickupAddress}</div>
+              <Popup className="custom-address-popup shadow-2xl">
+                <div className="p-4 bg-white">
+                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 opacity-60">Pickup Address</div>
+                  <div className="text-sm font-black text-gray-900 leading-snug">{pickupAddress}</div>
                 </div>
               </Popup>
             </Marker>
@@ -311,26 +350,31 @@ const TrackingMap = ({ pickupAreaName, dropoffAreaName, status, pickupAddress, d
             {/* Dropoff Marker */}
             <Marker
               position={dropoffLatLng}
-              icon={createIcon(config.dropoffColor, true, dropoffAreaName)}
+              icon={createIcon(config.dropoffColor, config.dropoffPulse, dropoffAreaName, status === 'delivered')}
+              eventHandlers={{
+                popupopen: (e) => setActiveMarkerPos(e.target.getLatLng()),
+                popupclose: () => setActiveMarkerPos(null),
+              }}
             >
-              <Popup className="custom-address-popup">
-                <div className="p-1">
-                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Drop-off Address</div>
-                  <div className="text-sm font-bold text-gray-900">{dropoffAddress}</div>
+              <Popup className="custom-address-popup shadow-2xl">
+                <div className="p-4 bg-white">
+                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 opacity-60">Drop-off Address</div>
+                  <div className="text-sm font-black text-gray-900 leading-snug">{dropoffAddress}</div>
                 </div>
               </Popup>
             </Marker>
           </MapContainer>
 
-          {/* Delivered Overlay (Top Left) - Non-obtrusive */}
+          {/* Delivered Overlay (Center Bottom) - Premium Thanks */}
           {status === 'delivered' && (
-            <div className="absolute top-4 left-4 z-[1000] animate-in slide-in-from-left-4 duration-700">
-              <div className="bg-white/90 backdrop-blur-md shadow-lg border border-green-100 flex items-center gap-2 p-2.5 rounded-2xl ring-1 ring-black/5">
-                <div className="bg-green-500 rounded-full w-7 h-7 flex items-center justify-center shrink-0">
-                   <CheckCircle2 className="w-4 h-4 text-white" />
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1001] animate-in slide-in-from-bottom-8 fade-in-0 duration-1000">
+              <div className="bg-white/40 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] border border-white/40 rounded-2xl flex items-center gap-3 px-6 py-3 ring-1 ring-black/5 min-w-[280px] justify-center">
+                <div className="bg-green-500/20 rounded-full w-8 h-8 flex items-center justify-center shrink-0 border border-green-500/20">
+                   <CheckCircle2 className="w-4 h-4 text-green-600" />
                 </div>
-                <div className="pr-1">
-                  <h4 className="text-green-900 font-black text-[10px] uppercase tracking-tight leading-none">Delivered</h4>
+                <div>
+                  <h4 className="text-gray-900 font-extrabold text-xs uppercase tracking-tighter leading-none mb-1">Delivered Successfully</h4>
+                  <p className="text-[10px] font-bold text-gray-500 tracking-tight leading-none">Thank you for using Dolu Logistics</p>
                 </div>
               </div>
             </div>
