@@ -23,18 +23,6 @@ A modern logistics and delivery platform built for swift, safe, and stress-free 
 - **Icons:** Lucide React
 - **Notifications:** React Toastify
 
-## Getting Started
-
-1. Clone the repository  
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Copy `.env.example` to `.env` and configure your database connection variables.
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
 
 ## Documentation
 
