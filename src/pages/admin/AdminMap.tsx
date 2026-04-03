@@ -200,6 +200,17 @@ const AdminMap = () => {
 
       {/* Map */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+        <style>{`
+          .flowing-route {
+            stroke-dasharray: 12 !important;
+            animation: dash-flow 0.8s linear infinite !important;
+          }
+          @keyframes dash-flow {
+            to {
+              stroke-dashoffset: 24;
+            }
+          }
+        `}</style>
         <MapContainer
           center={PORT_HARCOURT_CENTER}
           zoom={DEFAULT_ZOOM}
@@ -274,6 +285,7 @@ const AdminMap = () => {
                 color: '#E8792F',
                 weight: 3.5,
                 opacity: 0.9,
+                dashArray: '12',
                 className: 'flowing-route'
               }}
             />
