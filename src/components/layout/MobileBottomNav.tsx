@@ -5,7 +5,7 @@ const MobileBottomNav = () => {
   const navItems = [
     { icon: Home, label: 'Home', path: '/' },
     { icon: MapPin, label: 'Track', path: '/track' },
-    { icon: Package, label: 'Pickup', path: '/request' },
+    { icon: Package, label: 'Pickup', path: '/request-pickup' },
     { icon: MessageCircle, label: 'Contact', path: '/contact' },
   ];
 
