@@ -14,7 +14,7 @@ import {
   ClipboardList,
   MapPin,
 } from 'lucide-react';
-import { Link, NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AdminLayout = () => {
@@ -107,10 +107,9 @@ const AdminLayout = () => {
                   key={to}
                   to={to}
                   className={({ isActive }) =>
-                    `flex items-center space-x-3 px-5 py-3 transition-colors ${
-                      isActive
-                        ? 'bg-blue-900 text-lime-400'
-                        : 'text-blue-200 hover:bg-blue-900 hover:text-white'
+                    `flex items-center space-x-3 px-5 py-3 transition-colors ${isActive
+                      ? 'bg-blue-900 text-lime-400'
+                      : 'text-blue-200 hover:bg-blue-900 hover:text-white'
                     }`
                   }
                 >
@@ -185,10 +184,9 @@ const AdminLayout = () => {
                       to={to}
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={({ isActive }) =>
-                        `flex items-center space-x-3 px-4 py-3 rounded ${
-                          isActive
-                            ? 'bg-blue-900 text-lime-400'
-                            : 'text-blue-200 hover:bg-blue-900'
+                        `flex items-center space-x-3 px-4 py-3 rounded ${isActive
+                          ? 'bg-blue-900 text-lime-400'
+                          : 'text-blue-200 hover:bg-blue-900'
                         }`
                       }
                     >
