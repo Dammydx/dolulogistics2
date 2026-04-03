@@ -10,7 +10,7 @@ const MobileBottomNav = () => {
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[2100] pb-safe transition-all duration-300 backdrop-blur-xl supports-[backdrop-filter]:bg-sky-50/30 bg-sky-50/60 border-t border-sky-200/40 shadow-[0_-8px_30px_rgba(0,40,80,0.08)]">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[2100] pb-[env(safe-area-inset-bottom)] transition-all duration-300 backdrop-blur-xl supports-[backdrop-filter]:bg-sky-50/30 bg-sky-50/60 border-t border-sky-200/40 shadow-[0_-8px_30px_rgba(0,40,80,0.08)]">
       <div className="flex items-center justify-around w-full h-16 px-2">
         {navItems.map((item) => (
           <NavLink

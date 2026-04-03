@@ -77,7 +77,11 @@ interface TrackingMapProps {
 const TrackingMap = ({ pickupAreaName, dropoffAreaName, status }: TrackingMapProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isCardExpanded, setIsCardExpanded] = useState(true);
+  const [isTwoFingerDrag, setIsTwoFingerDrag] = useState(false);
+  const [showGestureOverlay, setShowGestureOverlay] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const polylineRef = useRef<L.Polyline>(null);
+  const rafRef = useRef<number>();
 
   const pickupCoord = getAreaCoordinates(pickupAreaName);
   const dropoffCoord = getAreaCoordinates(dropoffAreaName);
@@ -184,10 +188,47 @@ const TrackingMap = ({ pickupAreaName, dropoffAreaName, status }: TrackingMapPro
     return () => document.removeEventListener('fullscreenchange', handler);
   }, []);
 
+  // Manual Path Animation (requestAnimationFrame) - Bulletproof v4
+  useEffect(() => {
+    if (!polylineRef.current || status !== 'in_progress') {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      return;
+    }
+
+    let offset = 0;
+    const animate = () => {
+      offset = (offset - 0.5) % 24;
+      if (polylineRef.current) {
+        polylineRef.current.setStyle({ dashOffset: offset.toString() });
+      }
+      rafRef.current = requestAnimationFrame(animate);
+    };
+
+    rafRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    }
+  }, [status]);
+
   const fullRouteDashed: [number, number][] = config.showRoute ? [pickupLatLng, dropoffLatLng] : [];
 
   return (
     <div className="mb-8 space-y-4">
+      <style>{`
+        .flowing-route {
+          stroke-dasharray: 12 !important;
+        }
+        .leaflet-grab { cursor: grab; }
+        .leaflet-dragging .leaflet-grab { cursor: grabbing; }
+        
+        /* Mobile gesture overlay pulse */
+        @keyframes pulse-gesture {
+          0% { transform: scale(1); opacity: 0.8; }
+          50% { transform: scale(1.1); opacity: 1; }
+          100% { transform: scale(1); opacity: 0.8; }
+        }
+      `}</style>
+
       {/* Map Section Header */}
       <div className="flex items-center gap-3 px-1">
         <div className="w-1.5 h-6 bg-primary-500 rounded-full"></div>
@@ -205,12 +246,27 @@ const TrackingMap = ({ pickupAreaName, dropoffAreaName, status }: TrackingMapPro
         ref={containerRef}
         className={`relative overflow-hidden bg-white shadow-sm border border-gray-200 transition-all duration-500 flex flex-col ${
           isFullscreen 
-            ? 'fixed inset-0 z-[9999] h-screen w-screen rounded-none' 
+            ? 'fixed inset-0 z-[9999] h-[100dvh] w-screen rounded-none' 
             : 'w-full h-[400px] md:h-[550px] rounded-[1.5rem] md:rounded-[2rem]'
         }`}
       >
         {/* Map Container */}
         <div className="relative flex-1 min-h-[350px] md:min-h-[450px]">
+          {/* Two-finger gesture overlay */}
+          {showGestureOverlay && (
+            <div className="absolute inset-0 z-[2000] bg-black/60 backdrop-blur-[2px] flex items-center justify-center p-6 text-center animate-in fade-in duration-300">
+              <div className="bg-white/10 border border-white/20 rounded-3xl p-8 backdrop-blur-xl scale-in-95 duration-300">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/20 flex items-center justify-center animate-[pulse-gesture_2s_infinite]">
+                   <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A10.003 10.003 0 003 12c0-5.523 4.477-10 10-10s10 4.477 10 10a10.003 10.003 0 01-6.112 9.212l-.054.09m-3.44-2.04L12 21" />
+                   </svg>
+                </div>
+                <h4 className="text-white font-black text-lg uppercase tracking-wider mb-2">Use two fingers</h4>
+                <p className="text-white/80 text-sm font-medium">Use two fingers to move the map</p>
+              </div>
+            </div>
+          )}
+
           <MapContainer
             center={bounds[0]}
             zoom={13}
@@ -221,7 +277,27 @@ const TrackingMap = ({ pickupAreaName, dropoffAreaName, status }: TrackingMapPro
             }}
             zoomControl={false}
             attributionControl={false}
+            dragging={!L.Browser.mobile || isTwoFingerDrag}
+            scrollWheelZoom={false}
           >
+            <div 
+              className="absolute inset-0 z-[1001] md:hidden"
+              style={{ pointerEvents: isTwoFingerDrag ? 'none' : 'auto' }}
+              onTouchStart={(e) => {
+                if (e.touches.length === 2) {
+                  setIsTwoFingerDrag(true);
+                  setShowGestureOverlay(false);
+                } else {
+                  setIsTwoFingerDrag(false);
+                  setShowGestureOverlay(true);
+                  // Auto-hide after 2 seconds
+                  setTimeout(() => setShowGestureOverlay(false), 2000);
+                }
+              }}
+              onTouchEnd={() => {
+                setIsTwoFingerDrag(false);
+              }}
+            ></div>
             <MapResizeHandler isFullscreen={isFullscreen} />
             <TileLayer
               url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
@@ -281,6 +357,7 @@ const TrackingMap = ({ pickupAreaName, dropoffAreaName, status }: TrackingMapPro
             {/* Flowing route */}
             {fullRouteDashed.length > 0 && (
               <Polyline
+                ref={polylineRef}
                 positions={fullRouteDashed}
                 pathOptions={{
                   color: config.routeColor,
