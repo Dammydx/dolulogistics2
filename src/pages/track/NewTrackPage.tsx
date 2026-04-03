@@ -23,6 +23,7 @@ import { getAreaName } from '../../utils/locations';
 import { formatPrice } from '../../utils/pricing';
 import type { Booking, BookingStatusHistory } from '../../types/database';
 import { supabase } from '../../lib/supabase';
+import TrackingMap from '../../components/tracking/TrackingMap';
 
 const NewTrackPage = () => {
   const location = useLocation();
@@ -330,14 +331,14 @@ const NewTrackPage = () => {
 
                   {/* Item Category */}
                   {itemCategoryName && (
-                    <div className="bg-purple-50 rounded-lg p-4">
+                    <div className="bg-blue-50 rounded-lg p-4">
                       <h3 className="font-semibold text-lg mb-2 flex items-center">
-                        <Package className="w-5 h-5 mr-2 text-purple-500" />
+                        <Package className="w-5 h-5 mr-2 text-blue-500" />
                         Item Category
                       </h3>
-                      <p className="font-semibold text-purple-700 text-base">{itemCategoryName}</p>
+                      <p className="font-semibold text-blue-700 text-base">{itemCategoryName}</p>
                       {booking.item_notes && (
-                        <div className="mt-2 bg-white rounded-md p-3 border border-purple-100">
+                        <div className="mt-2 bg-white rounded-md p-3 border border-blue-100">
                           <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Parcel Description</p>
                           <p className="text-gray-800 text-sm">{booking.item_notes}</p>
                         </div>
@@ -366,6 +367,15 @@ const NewTrackPage = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Delivery Map */}
+              {pickupAreaName && dropoffAreaName && (
+                <TrackingMap
+                  pickupAreaName={pickupAreaName}
+                  dropoffAreaName={dropoffAreaName}
+                  status={booking.status}
+                />
+              )}
 
               {/* Timeline */}
               {history.length > 0 && (

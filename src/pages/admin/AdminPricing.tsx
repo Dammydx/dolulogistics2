@@ -65,6 +65,7 @@ const AdminPricing = () => {
   const [editingAreaId, setEditingAreaId] = useState<string | null>(null);
   const [areaName, setAreaName] = useState('');
   const [areaZoneId, setAreaZoneId] = useState('');
+  const [areaActive, setAreaActive] = useState(true);
   const [isSubmittingArea, setIsSubmittingArea] = useState(false);
   const [areaFilter, setAreaFilter] = useState<string>('all');
 
@@ -188,6 +189,7 @@ const AdminPricing = () => {
           .update({
             name: areaName.trim(),
             zone_id: areaZoneId || null,
+            active: areaActive,
           })
           .eq('id', editingAreaId);
 
@@ -224,6 +226,7 @@ const AdminPricing = () => {
   const handleEditArea = (area: Area) => {
     setAreaName(area.name);
     setAreaZoneId(area.zone_id || '');
+    setAreaActive(area.active);
     setEditingAreaId(area.id);
     setShowAreaForm(true);
   };
@@ -236,15 +239,23 @@ const AdminPricing = () => {
       if (error) throw error;
       toast.success(`Area "${name}" deleted`);
       await fetchData();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error deleting area:', err);
-      toast.error('Failed to delete area. It may be referenced by bookings.');
+      if (err.code === '23503') {
+        toast.info(
+          `Cannot delete "${name}" because it has existing bookings. We suggest deactivating it instead to keep your records safe.`,
+          { autoClose: 6000 }
+        );
+      } else {
+        toast.error('Failed to delete area.');
+      }
     }
   };
 
   const resetAreaForm = () => {
     setAreaName('');
     setAreaZoneId('');
+    setAreaActive(true);
     setEditingAreaId(null);
     setShowAreaForm(false);
   };
@@ -591,6 +602,25 @@ const AdminPricing = () => {
                     </select>
                   </div>
 
+                  {editingAreaId && (
+                    <div className="flex flex-col justify-center">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Status
+                      </label>
+                      <button
+                        onClick={() => setAreaActive(!areaActive)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
+                          areaActive 
+                            ? 'bg-green-50 border-green-200 text-green-700' 
+                            : 'bg-gray-100 border-gray-300 text-gray-500'
+                        }`}
+                      >
+                        <div className={`w-2 h-2 rounded-full ${areaActive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
+                        <span className="text-xs font-bold uppercase">{areaActive ? 'Active' : 'Inactive'}</span>
+                      </button>
+                    </div>
+                  )}
+
                   <div className="flex items-end gap-2">
                     <button
                       onClick={handleSaveArea}
@@ -632,9 +662,15 @@ const AdminPricing = () => {
                             {zoneAreas.map((area) => (
                               <div
                                 key={area.id}
-                                className="group flex items-center gap-1.5 bg-white border border-gray-200 rounded-full px-3 py-1.5 hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                                className={`group flex items-center gap-1.5 border rounded-full px-3 py-1.5 transition-colors ${
+                                  area.active 
+                                    ? 'bg-white border-gray-200 hover:border-blue-300 hover:bg-blue-50' 
+                                    : 'bg-gray-100/50 border-gray-200 opacity-60 grayscale-[0.5]'
+                                }`}
                               >
-                                <span className="text-sm text-gray-800">{area.name}</span>
+                                <span className={`text-sm ${area.active ? 'text-gray-800' : 'text-gray-500 underline decoration-gray-300'}`}>
+                                  {area.name}
+                                </span>
                                 <button
                                   onClick={() => handleEditArea(area)}
                                   className="hidden group-hover:inline-flex text-blue-500 hover:text-blue-700"

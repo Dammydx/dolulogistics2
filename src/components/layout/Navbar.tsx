@@ -45,7 +45,7 @@ const Navbar = () => {
   return (
     <header
       className={[
-        'fixed top-0 w-full z-50 transition-all duration-300',
+        'fixed top-0 w-full z-[2100] transition-all duration-300',
         // 🔹 SOFT LIGHT-BLUE GLASS (not white)
         'backdrop-blur-xl supports-[backdrop-filter]:bg-sky-50/30',
         'bg-sky-50/60',

@@ -32,6 +32,7 @@ import {
 } from '../../utils/locations';
 import { calculatePriceQuote, fetchAddons, formatPrice } from '../../utils/pricing';
 import type { State, City, Area, Addon, PriceQuote } from '../../types/database';
+import QuoteMap from '../../components/quote/QuoteMap';
 
 const GetQuotePage = () => {
   const navigate = useNavigate();
@@ -168,6 +169,9 @@ const GetQuotePage = () => {
       },
     });
   };
+
+  const pickupAreaName = pickupAreas.find(a => a.id === pickupAreaId)?.name || '';
+  const dropoffAreaName = dropoffAreas.find(a => a.id === dropoffAreaId)?.name || '';
 
   return (
     <div className="min-h-screen pt-24 pb-20 bg-gradient-to-b from-background to-gray-100">
@@ -363,6 +367,15 @@ const GetQuotePage = () => {
                       </label>
                     ))}
                   </div>
+                  {/* Mobile Map View: Appears between form and summary on small screens */}
+                  {pickupAreaName && dropoffAreaName && (
+                    <div className="lg:hidden mt-6">
+                      <QuoteMap 
+                        pickupAreaName={pickupAreaName}
+                        dropoffAreaName={dropoffAreaName}
+                      />
+                    </div>
+                  )}
                 </motion.div>
               )}
             </div>
@@ -383,48 +396,58 @@ const GetQuotePage = () => {
                     <p className="text-gray-500 mt-3">Calculating...</p>
                   </div>
                 ) : quote?.success ? (
-                  <div className="space-y-4">
-                    {/* Base Price */}
-                    <div className="flex justify-between py-2 border-b border-gray-200">
-                      <span className="text-gray-600">Base Price</span>
-                      <span className="font-medium">{formatPrice(quote.base_price)}</span>
+                  <div className="space-y-6">
+                    {/* Desktop Map: Appears inside the side card on large screens */}
+                    <div className="hidden lg:block -mx-2">
+                       <QuoteMap 
+                        pickupAreaName={pickupAreaName}
+                        dropoffAreaName={dropoffAreaName}
+                      />
                     </div>
 
-                    {/* Add-ons */}
-                    {quote.addons_price > 0 && (
+                    <div className="space-y-4">
+                      {/* Base Price */}
                       <div className="flex justify-between py-2 border-b border-gray-200">
-                        <span className="text-gray-600">Add-ons</span>
-                        <span className="font-medium">{formatPrice(quote.addons_price)}</span>
+                        <span className="text-gray-600">Base Price</span>
+                        <span className="font-medium">{formatPrice(quote.base_price)}</span>
                       </div>
-                    )}
 
-                    {/* Total */}
-                    <div className="flex justify-between py-3 bg-primary-50 px-4 rounded-md">
-                      <span className="font-semibold text-lg">Total</span>
-                      <span className="font-bold text-2xl text-primary-600">
-                        {formatPrice(quote.total_price)}
-                      </span>
-                    </div>
-
-                    {/* ETA */}
-                    {quote.eta_text && (
-                      <div className="flex items-start space-x-2 p-3 bg-blue-50 rounded-md">
-                        <Info className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                        <div className="text-sm text-blue-800">
-                          <div className="font-medium">Estimated Delivery Time</div>
-                          <div>{quote.eta_text}</div>
+                      {/* Add-ons */}
+                      {quote.addons_price > 0 && (
+                        <div className="flex justify-between py-2 border-b border-gray-200">
+                          <span className="text-gray-600">Add-ons</span>
+                          <span className="font-medium">{formatPrice(quote.addons_price)}</span>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {/* Continue Button */}
-                    <button
-                      onClick={handleContinueToBooking}
-                      className="w-full px-6 py-3 bg-primary-500 text-white rounded-md font-medium hover:bg-primary-600 transition-colors flex items-center justify-center"
-                    >
-                      Continue to Request Pickup
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </button>
+                      {/* Total */}
+                      <div className="flex justify-between py-3 bg-primary-50 px-4 rounded-md">
+                        <span className="font-semibold text-lg">Total</span>
+                        <span className="font-bold text-2xl text-primary-600">
+                          {formatPrice(quote.total_price)}
+                        </span>
+                      </div>
+
+                      {/* ETA */}
+                      {quote.eta_text && (
+                        <div className="flex items-start space-x-2 p-3 bg-blue-50 rounded-md">
+                          <Info className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                          <div className="text-sm text-blue-800">
+                            <div className="font-medium">Estimated Delivery Time</div>
+                            <div>{quote.eta_text}</div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Continue Button */}
+                      <button
+                        onClick={handleContinueToBooking}
+                        className="w-full px-6 py-3 bg-primary-500 text-white rounded-md font-medium hover:bg-primary-600 transition-colors flex items-center justify-center shadow-lg hover:shadow-xl active:scale-[0.98]"
+                      >
+                        Continue to Request Pickup
+                        <ArrowRight className="w-5 h-5 ml-2" />
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div className="text-center py-8 text-gray-500">

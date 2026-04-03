@@ -24,6 +24,7 @@ import AdminPricing from './pages/admin/AdminPricing';
 import AdminTemplates from './pages/admin/AdminTemplates';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminReports from './pages/admin/AdminReports';
+import AdminMap from './pages/admin/AdminMap';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
@@ -55,6 +56,7 @@ function App() {
           <Route path="templates" element={<AdminTemplates />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="reports" element={<AdminReports />} />
+          <Route path="map" element={<AdminMap />} />
         </Route>
       </Routes>
     </Router>
