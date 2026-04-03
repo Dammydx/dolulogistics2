@@ -201,8 +201,15 @@ const TrackingMap = ({ pickupAreaName, dropoffAreaName, status, pickupAddress, d
 
   const config = statusConfig[status] || statusConfig.pending;
 
-  // Generate intermediate points for dots
-  const routePoints = config.showRoute ? getInterpolatedPoints(pickupLatLng, dropoffLatLng, 12) : [];
+  // Generate intermediate points for dots (Dynamic count based on distance)
+  const dist = Math.sqrt(
+    Math.pow(pickupLatLng[0] - dropoffLatLng[0], 2) + 
+    Math.pow(pickupLatLng[1] - dropoffLatLng[1], 2)
+  );
+  
+  // 100 multiplier provides a professional gap for Port Harcourt distances
+  const dotCount = Math.max(4, Math.min(25, Math.floor(dist * 100)));
+  const routePoints = config.showRoute ? getInterpolatedPoints(pickupLatLng, dropoffLatLng, dotCount) : [];
 
   return (
     <div className="mb-8 space-y-4">

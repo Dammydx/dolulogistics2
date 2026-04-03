@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Map as MapIcon, X } from 'lucide-react';
@@ -23,7 +23,7 @@ const hexToRgb = (hex: string) => {
   return `${r}, ${g}, ${b}`;
 };
 
-// Custom SVG SLEEK markers
+// Custom SVG SLEEK markers for zones
 const createIcon = (color: string, variant: 'pin' | 'dot' = 'dot', pulse: boolean = false, label?: string) => {
   const rgb = hexToRgb(color);
 
@@ -32,10 +32,10 @@ const createIcon = (color: string, variant: 'pin' | 'dot' = 'dot', pulse: boolea
     : '';
 
   const labelHtml = label 
-    ? `<div class="absolute top-[100%] left-1/2 -translate-x-1/2 whitespace-nowrap bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded border border-gray-100 shadow-sm text-[9px] font-bold text-gray-700 mt-1 pointer-events-none">${label}</div>`
+    ? `<div class="absolute top-[100%] left-1/2 -translate-x-1/2 whitespace-nowrap bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded border border-gray-100 shadow-sm text-[9px] font-bold text-gray-700 mt-1 pointer-events-none uppercase tracking-tighter">${label}</div>`
     : '';
 
-  // Minimal dot variant for better performance and less clutter
+  // Minimal dot variant for zones
   if (variant === 'dot') {
     return L.divIcon({
       className: 'custom-div-icon',
@@ -50,13 +50,13 @@ const createIcon = (color: string, variant: 'pin' | 'dot' = 'dot', pulse: boolea
     });
   }
 
-  // Large pin variant for active selection
+  // Large pin variant for selection
   return L.divIcon({
     className: 'custom-div-icon',
     html: `
-      <div class="relative flex flex-col items-center justify-center" style="width: 32px; height: 40px;">
+      <div class="relative flex flex-col items-center justify-center pointer-events-none" style="width: 32px; height: 40px;">
         <svg viewBox="0 0 24 24" fill="${color}" stroke="white" stroke-width="2" class="w-8 h-8 md:w-9 md:h-9 drop-shadow-md z-10 transition-transform hover:scale-110">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-linecap="round" stroke-linejoin="round"></path>
           <circle cx="12" cy="10" r="3" fill="white" stroke="none"></circle>
         </svg>
         ${pulseHtml}
@@ -68,7 +68,32 @@ const createIcon = (color: string, variant: 'pin' | 'dot' = 'dot', pulse: boolea
   });
 };
 
+// Route dot icon helper
+const createRouteDotIcon = (color: string, delay: number) => {
+  const rgb = hexToRgb(color);
+  return L.divIcon({
+    className: 'custom-div-icon',
+    html: `
+      <div class="relative flex items-center justify-center pointer-events-none" style="width: 14px; height: 14px;">
+        <div class="w-2 h-2 rounded-full z-10" style="background-color: ${color};"></div>
+        <div class="absolute inset-0 rounded-full tracking-pin-pulse" style="--pulse-color: ${rgb}; background-color: ${color}; animation-delay: ${delay}s;"></div>
+      </div>
+    `,
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+  });
+};
 
+// Interpolation helper
+const getInterpolatedPoints = (start: [number, number], end: [number, number], count: number) => {
+  const points: [number, number][] = [];
+  for (let i = 1; i < count; i++) {
+    const lat = start[0] + (end[0] - start[0]) * (i / count);
+    const lng = start[1] + (end[1] - start[1]) * (i / count);
+    points.push([lat, lng]);
+  }
+  return points;
+};
 
 // Reset map view component
 const ResetView = ({ center, zoom }: { center: [number, number]; zoom: number }) => {
@@ -84,8 +109,6 @@ const AdminMap = () => {
   const [selectedPickup, setSelectedPickup] = useState<string | null>(null);
   const [selectedDropoff, setSelectedDropoff] = useState<string | null>(null);
   const [quotePrice, setQuotePrice] = useState<number | null>(null);
-  const polylineRef = useRef<L.Polyline>(null);
-  const rafRef = useRef<number>();
 
   // Calculate price when both are selected
   useEffect(() => {
@@ -100,7 +123,7 @@ const AdminMap = () => {
     } else {
       setQuotePrice(null);
     }
-  }, [selectedPickup, selectedDropoff]);
+  }, [selectedPickup, selectedDropoff, allAreas]);
 
   const handleMarkerClick = (name: string) => {
     if (!selectedPickup) {
@@ -108,7 +131,6 @@ const AdminMap = () => {
     } else if (!selectedDropoff && name !== selectedPickup) {
       setSelectedDropoff(name);
     } else {
-      // Reset and start new selection
       setSelectedPickup(name);
       setSelectedDropoff(null);
     }
@@ -120,277 +142,206 @@ const AdminMap = () => {
     setQuotePrice(null);
   };
 
-  // Get line coordinates
-  const getLineCoords = (): [number, number][] => {
-    if (!selectedPickup || !selectedDropoff) return [];
-    const pickup = allAreas.find(a => a.name === selectedPickup);
-    const dropoff = allAreas.find(a => a.name === selectedDropoff);
-    if (!pickup || !dropoff) return [];
-    return [
-      [pickup.coord.lat, pickup.coord.lng],
-      [dropoff.coord.lat, dropoff.coord.lng],
-    ];
-  };
+  // Route calculation
+  const routeData = useMemo(() => {
+    if (!selectedPickup || !selectedDropoff) return null;
+    const p = allAreas.find(a => a.name === selectedPickup);
+    const d = allAreas.find(a => a.name === selectedDropoff);
+    if (!p || !d) return null;
 
-  const lineCoords = getLineCoords();
-
-  // Manual Path Animation (requestAnimationFrame) - Bulletproof v4
-  useEffect(() => {
-    if (!polylineRef.current || lineCoords.length !== 2) {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      return;
-    }
-
-    let offset = 0;
-    const animate = () => {
-      offset = (offset - 0.5) % 24;
-      const el = polylineRef.current?.getElement() as SVGPathElement | null;
-      if (el) {
-        el.style.strokeDashoffset = offset.toString();
-      }
-      rafRef.current = requestAnimationFrame(animate);
+    const pCoords: [number, number] = [p.coord.lat, p.coord.lng];
+    const dCoords: [number, number] = [d.coord.lat, d.coord.lng];
+    
+    // Dynamic density (Synchronized scaling)
+    const dist = Math.sqrt(Math.pow(pCoords[0] - dCoords[0], 2) + Math.pow(pCoords[1] - dCoords[1], 2));
+    const dotCount = Math.max(4, Math.min(25, Math.floor(dist * 100)));
+    
+    return {
+      coords: [pCoords, dCoords] as [number, number][],
+      dots: getInterpolatedPoints(pCoords, dCoords, dotCount)
     };
-
-    rafRef.current = requestAnimationFrame(animate);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    }
-  }, [lineCoords]);
+  }, [selectedPickup, selectedDropoff, allAreas]);
 
   // Group areas by zone for legend
   const zones = ['A', 'B', 'C', 'D', 'E', 'F'];
 
   return (
     <div className="space-y-6">
+      <style>{`.leaflet-grab { cursor: grab; } .leaflet-dragging .leaflet-grab { cursor: grabbing; }`}</style>
+      
       {/* Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
+        <h1 className="text-2xl sm:text-3xl font-black text-gray-900 flex items-center gap-3">
           <MapIcon className="h-7 w-7 text-blue-600" />
-          Zone Map
+          ZONE MAP
         </h1>
-        <p className="text-gray-600 text-sm mt-1">
-          Click any two zones to see the delivery quote price
+        <p className="text-gray-500 text-sm mt-1 font-bold uppercase tracking-widest opacity-60">
+          SELECT ZONES TO CALCULATE DELIVERY QUOTES
         </p>
       </div>
 
-      {/* Instructions + Quote Display */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4 flex-wrap">
-            {!selectedPickup && (
-              <span className="text-sm text-gray-500 flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-blue-500 inline-block animate-pulse"></span>
-                Click a zone to set <strong>Pickup</strong>
-              </span>
-            )}
-            {selectedPickup && !selectedDropoff && (
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-blue-700 bg-blue-50 px-3 py-1.5 rounded-full">
-                  📍 Pickup: {selectedPickup}
-                </span>
-                <span className="text-sm text-gray-500 flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-green-500 inline-block animate-pulse"></span>
-                  Now click <strong>Drop-off</strong>
-                </span>
-              </div>
-            )}
-            {selectedPickup && selectedDropoff && (
-              <div className="flex items-center gap-3 flex-wrap">
-                <span className="text-sm font-medium text-blue-700 bg-blue-50 px-3 py-1.5 rounded-full">
-                  📍 {selectedPickup}
-                </span>
-                <span className="text-gray-400">→</span>
-                <span className="text-sm font-medium text-green-700 bg-green-50 px-3 py-1.5 rounded-full">
-                  📍 {selectedDropoff}
-                </span>
-                {quotePrice !== null && (
-                  <span className="text-lg font-bold text-primary-600 bg-primary-50 px-4 py-1.5 rounded-full border border-primary-200">
-                    ₦{quotePrice.toLocaleString()}
-                  </span>
+      {/* Map Control / Quote Card Combined */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Quote Display */}
+        <div className="lg:col-span-1 bg-white rounded-[2rem] border border-gray-200 shadow-sm p-6 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Pricing Panel</span>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Pickup Selection */}
+              <div className={`p-4 rounded-2xl border transition-all ${selectedPickup ? 'bg-blue-50 border-blue-100' : 'bg-gray-50 border-gray-100'}`}>
+                <div className="text-[9px] text-gray-400 uppercase font-black tracking-widest mb-2">Pickup Point</div>
+                {selectedPickup ? (
+                  <div className="text-sm font-black text-blue-700 uppercase">{selectedPickup}</div>
+                ) : (
+                  <div className="text-sm font-bold text-gray-400 italic">Select on map...</div>
                 )}
               </div>
-            )}
-          </div>
-          {(selectedPickup || selectedDropoff) && (
-            <button
-              onClick={clearSelection}
-              className="text-sm px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center gap-1.5 transition-colors"
-            >
-              <X className="w-3.5 h-3.5" />
-              Clear
-            </button>
-          )}
-        </div>
-      </div>
 
-      {/* Map */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden relative">
-        <style>{`
-          .flowing-route {
-            stroke-dasharray: 12 !important;
-          }
-          .leaflet-grab { cursor: grab; }
-          .leaflet-dragging .leaflet-grab { cursor: grabbing; }
-        `}</style>
-
-        <MapContainer
-          center={PORT_HARCOURT_CENTER}
-          zoom={DEFAULT_ZOOM}
-          style={{ height: '520px', width: '100%' }}
-          zoomControl={true}
-          attributionControl={false}
-          dragging={false}
-          scrollWheelZoom={false}
-          touchZoom={false}
-          doubleClickZoom={false}
-          boxZoom={false}
-          keyboard={false}
-        >
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-          />
-          <ResetView center={PORT_HARCOURT_CENTER} zoom={DEFAULT_ZOOM} />
-
-          {/* Floating Quote Screen */}
-          {selectedPickup && (
-            <div className="absolute top-6 right-6 z-[1000] bg-white/90 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-white/20 rounded-3xl p-5 min-w-[240px] animate-in slide-in-from-right-8 duration-500 ring-1 ring-black/5">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Estimate</span>
-                </div>
-                <button 
-                  onClick={clearSelection}
-                  className="p-1.5 hover:bg-gray-100 rounded-xl transition-all active:scale-90"
-                >
-                  <X className="w-3.5 h-3.5 text-gray-400" />
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="relative pl-4 border-l-2 border-dashed border-gray-100 py-1">
-                  <div className="absolute -left-[7px] top-0 w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-sm"></div>
-                  <div className="mb-4">
-                    <div className="text-[9px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">Pickup</div>
-                    <div className="text-sm font-black text-gray-900 leading-tight">{selectedPickup}</div>
-                  </div>
-
-                  <div className="absolute -left-[7px] bottom-0 w-3 h-3 rounded-full bg-green-500 border-2 border-white shadow-sm"></div>
-                  <div>
-                    <div className="text-[9px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">Drop-off</div>
-                    {selectedDropoff ? (
-                      <div className="text-sm font-black text-gray-900 leading-tight">{selectedDropoff}</div>
-                    ) : (
-                      <div className="text-sm font-bold text-blue-400/60 italic animate-pulse">Select on map...</div>
-                    )}
-                  </div>
-                </div>
-                
-                {selectedDropoff && (
-                  <div className="mt-6 pt-4 border-t border-gray-100">
-                    <div className="flex items-center justify-between items-end">
-                      <div>
-                        <div className="text-[9px] text-gray-400 uppercase font-bold tracking-wider">Total Quote</div>
-                        <div className="text-2xl font-black text-primary-600 tracking-tighter">
-                          ₦{quotePrice?.toLocaleString()}
-                        </div>
-                      </div>
-                      <div className="bg-primary-50 text-primary-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter border border-primary-100">
-                        Top Zone
-                      </div>
-                    </div>
-                  </div>
+              {/* Destination Selection */}
+              <div className={`p-4 rounded-2xl border transition-all ${selectedDropoff ? 'bg-green-50 border-green-100' : 'bg-gray-50 border-gray-100'}`}>
+                <div className="text-[9px] text-gray-400 uppercase font-black tracking-widest mb-2">Destination</div>
+                {selectedDropoff ? (
+                  <div className="text-sm font-black text-green-700 uppercase">{selectedDropoff}</div>
+                ) : (
+                  <div className="text-sm font-bold text-gray-400 italic">Select on map...</div>
                 )}
               </div>
             </div>
+          </div>
+
+          {selectedPickup && selectedDropoff ? (
+            <div className="mt-8 pt-6 border-t border-gray-100">
+              <div className="flex items-center justify-between items-end mb-4">
+                <div>
+                  <div className="text-[10px] text-gray-400 uppercase font-black tracking-widest">Delivery Fee</div>
+                  <div className="text-3xl font-black text-primary-600 tracking-tighter">
+                    ₦{quotePrice?.toLocaleString()}
+                  </div>
+                </div>
+                <div className="bg-primary-50 text-primary-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter border border-primary-100">
+                  Standard Rate
+                </div>
+              </div>
+              <button 
+                onClick={clearSelection}
+                className="w-full py-3 bg-gray-900 text-white rounded-xl font-black uppercase text-xs tracking-widest hover:bg-black transition-all active:scale-95 flex items-center justify-center gap-2"
+              >
+                <X className="w-4 h-4" />
+                Clear Selection
+              </button>
+            </div>
+          ) : (
+            <div className="mt-8 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+               <p className="text-amber-800 text-xs font-bold leading-relaxed">
+                 Select both a pickup and a destination on the map to see the calculated delivery cost for that route.
+               </p>
+            </div>
           )}
+        </div>
 
-          {/* Route Line */}
-          {lineCoords.length === 2 && (
-            <Polyline
-              ref={polylineRef}
-              positions={lineCoords}
-              pathOptions={{
-                color: '#E8792F',
-                weight: 3.5,
-                opacity: 0.9,
-                dashArray: '12',
-                className: 'flowing-route'
-              }}
-            />
-          )}
+        {/* Map Display */}
+        <div className="lg:col-span-2 bg-white rounded-[2rem] border border-gray-200 shadow-sm overflow-hidden relative min-h-[500px]">
+          <MapContainer
+            center={PORT_HARCOURT_CENTER}
+            zoom={DEFAULT_ZOOM}
+            style={{ height: '550px', width: '100%', zIndex: 1 }}
+            zoomControl={true}
+            attributionControl={false}
+            dragging={true}
+            scrollWheelZoom={true}
+            touchZoom={true}
+            doubleClickZoom={true}
+            boxZoom={true}
+            keyboard={true}
+          >
+            <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
+            <ResetView center={PORT_HARCOURT_CENTER} zoom={DEFAULT_ZOOM} />
 
-          {/* Optimized Area Markers */}
-          {useMemo(() => {
-            // Pre-calculate ALL icons once (60+ markers) so they are reused across renders
-            // This allows us to keep the labels without the lag
-            const iconCache: Record<string, L.DivIcon> = {};
-            
-            allAreas.forEach(({ name, coord }) => {
-              const zoneColor = coord.zone ? ZONE_COLORS[coord.zone] : '#6B7280';
-              // Base DOT icon for this specific area
-              iconCache[name] = createIcon(zoneColor, 'dot', false, name);
-            });
+            {/* Damp Guiding Line */}
+            {routeData && (
+              <Polyline
+                positions={routeData.coords}
+                pathOptions={{
+                  color: '#E8792F',
+                  weight: 2.5,
+                  opacity: 0.25,
+                  dashArray: '5, 12'
+                }}
+              />
+            )}
 
-            return allAreas.map(({ name, coord }) => {
-              const isPickup = selectedPickup === name;
-              const isDropoff = selectedDropoff === name;
-              
-              // Use PIN for selection, DOT for default
-              let icon;
-              if (isPickup) icon = createIcon('#3B82F6', 'pin', true, name);
-              else if (isDropoff) icon = createIcon('#10B981', 'pin', true, name);
-              else icon = iconCache[name];
+            {/* Dynamic Route Dots */}
+            {routeData && routeData.dots.map((point, index) => (
+              <Marker
+                key={`dot-${index}`}
+                position={point}
+                icon={createRouteDotIcon('#E8792F', index * 0.25)}
+              />
+            ))}
 
-              return (
-                <Marker
-                  key={name}
-                  position={[coord.lat, coord.lng]}
-                  icon={icon}
-                  eventHandlers={{
-                    click: () => handleMarkerClick(name),
-                  }}
-                >
-                  <Tooltip
-                    direction="top"
-                    offset={[0, -10]}
-                    className="custom-tooltip"
+            {/* Zone Markers */}
+            {useMemo(() => {
+              const iconCache: Record<string, L.DivIcon> = {};
+              allAreas.forEach(({ name, coord }) => {
+                const zoneColor = coord.zone ? ZONE_COLORS[coord.zone] : '#6B7280';
+                iconCache[name] = createIcon(zoneColor, 'dot', false, name);
+              });
+
+              return allAreas.map(({ name, coord }) => {
+                const isPickup = selectedPickup === name;
+                const isDropoff = selectedDropoff === name;
+                
+                let icon;
+                if (isPickup) icon = createIcon('#3B82F6', 'pin', true, name);
+                else if (isDropoff) icon = createIcon('#10B981', 'pin', true, name);
+                else icon = iconCache[name];
+
+                return (
+                  <Marker
+                    key={name}
+                    position={[coord.lat, coord.lng]}
+                    icon={icon}
+                    eventHandlers={{ click: () => handleMarkerClick(name) }}
                   >
-                    <div className="text-center">
-                      <div className="font-semibold text-sm">{name}</div>
-                      {coord.zone && (
-                        <div className="text-xs text-gray-500">
-                          Zone {coord.zone} — ₦{(ZONE_PRICES[coord.zone] || 0).toLocaleString()}
-                        </div>
-                      )}
-                    </div>
-                  </Tooltip>
-                </Marker>
-              );
-            });
-          }, [allAreas, selectedPickup, selectedDropoff])}
-        </MapContainer>
+                    <Tooltip direction="top" offset={[0, -10]} className="custom-tooltip">
+                      <div className="text-center p-1">
+                        <div className="font-black text-gray-900 text-sm uppercase tracking-tighter">{name}</div>
+                        {coord.zone && (
+                          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">
+                            Zone {coord.zone} — ₦{ZONE_PRICES[coord.zone].toLocaleString()}
+                          </div>
+                        )}
+                      </div>
+                    </Tooltip>
+                  </Marker>
+                );
+              });
+            }, [allAreas, selectedPickup, selectedDropoff])}
+          </MapContainer>
+        </div>
       </div>
 
       {/* Zone Legend */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
-        <h3 className="font-semibold text-gray-900 mb-4">Zone Legend</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+      <div className="bg-white rounded-[2rem] border border-gray-200 shadow-sm p-6">
+        <h3 className="font-black text-gray-900 mb-6 uppercase tracking-widest text-sm opacity-60">PRICE ZONES</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
           {zones.map(zone => (
             <div
               key={zone}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg border border-gray-100"
+              className="group p-4 rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all transition-all duration-300"
               style={{ borderLeftColor: ZONE_COLORS[zone], borderLeftWidth: 4 }}
             >
-              <div>
-                <div className="font-semibold text-gray-900 text-sm">Zone {zone}</div>
-                <div className="text-xs text-gray-500">₦{ZONE_PRICES[zone].toLocaleString()}</div>
-              </div>
+              <div className="font-black text-gray-900 text-sm mb-1 uppercase tracking-tighter">Zone {zone}</div>
+              <div className="text-[10px] font-black text-primary-600 uppercase tracking-widest">₦{ZONE_PRICES[zone].toLocaleString()}</div>
             </div>
           ))}
         </div>
-        <p className="text-xs text-gray-400 mt-3">
-          Price is based on the <strong>highest zone</strong> between pickup and drop-off.
+        <p className="text-[10px] text-gray-400 mt-6 font-bold uppercase tracking-widest opacity-50">
+          * SYSTEM CALCULATES RATE BASED ON THE HIGHEST ZONE IN THE ROUTE.
         </p>
       </div>
     </div>
