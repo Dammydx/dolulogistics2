@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Map as MapIcon, X } from 'lucide-react';
@@ -14,13 +14,18 @@ import 'leaflet/dist/leaflet.css';
 // Fix default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
-// Custom SVG drop pin marker
-const createIcon = (color: string, pulse: boolean = false, label?: string) => {
-  const hex = color.replace('#', '');
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
-  const rgb = `${r}, ${g}, ${b}`;
+// Helper to parse hex to RGB
+const hexToRgb = (hex: string) => {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return `${r}, ${g}, ${b}`;
+};
+
+// Custom SVG SLEEK markers
+const createIcon = (color: string, variant: 'pin' | 'dot' = 'dot', pulse: boolean = false, label?: string) => {
+  const rgb = hexToRgb(color);
 
   const pulseHtml = pulse 
     ? `<div class="absolute tracking-pin-pulse" style="--pulse-color: ${rgb}; width: 14px; height: 14px; border-radius: 50%; background: ${color}; bottom: -4px; left: 9px; opacity: 0.6; z-index: -1;"></div>`
@@ -30,6 +35,22 @@ const createIcon = (color: string, pulse: boolean = false, label?: string) => {
     ? `<div class="absolute top-[100%] left-1/2 -translate-x-1/2 whitespace-nowrap bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded border border-gray-100 shadow-sm text-[9px] font-bold text-gray-700 mt-1 pointer-events-none">${label}</div>`
     : '';
 
+  // Minimal dot variant for better performance and less clutter
+  if (variant === 'dot') {
+    return L.divIcon({
+      className: 'custom-div-icon',
+      html: `
+        <div class="relative flex flex-col items-center justify-center" style="width: 24px; height: 24px;">
+          <div class="w-3 h-3 rounded-full border-2 border-white shadow-sm transition-transform hover:scale-150" style="background-color: ${color};"></div>
+          ${labelHtml}
+        </div>
+      `,
+      iconSize: [24, 24],
+      iconAnchor: [12, 12],
+    });
+  }
+
+  // Large pin variant for active selection
   return L.divIcon({
     className: 'custom-div-icon',
     html: `
@@ -59,7 +80,7 @@ const ResetView = ({ center, zoom }: { center: [number, number]; zoom: number })
 };
 
 const AdminMap = () => {
-  const allAreas = getAllAreaCoordinates();
+  const allAreas = useMemo(() => getAllAreaCoordinates(), []);
   const [selectedPickup, setSelectedPickup] = useState<string | null>(null);
   const [selectedDropoff, setSelectedDropoff] = useState<string | null>(null);
   const [quotePrice, setQuotePrice] = useState<number | null>(null);
@@ -258,42 +279,55 @@ const AdminMap = () => {
             />
           )}
 
-          {/* Area Markers */}
-          {allAreas.map(({ name, coord }) => {
-            const isPickup = selectedPickup === name;
-            const isDropoff = selectedDropoff === name;
-            const zoneColor = coord.zone ? ZONE_COLORS[coord.zone] : '#6B7280';
+          {/* Optimized Area Markers */}
+          {useMemo(() => {
+            // Pre-calculate ALL icons once (60+ markers) so they are reused across renders
+            // This allows us to keep the labels without the lag
+            const iconCache: Record<string, L.DivIcon> = {};
+            
+            allAreas.forEach(({ name, coord }) => {
+              const zoneColor = coord.zone ? ZONE_COLORS[coord.zone] : '#6B7280';
+              // Base DOT icon for this specific area
+              iconCache[name] = createIcon(zoneColor, 'dot', false, name);
+            });
 
-            return (
-              <Marker
-                key={name}
-                position={[coord.lat, coord.lng]}
-                icon={
-                  isPickup ? createIcon('#3B82F6', true, name) :
-                  isDropoff ? createIcon('#10B981', true, name) :
-                  createIcon(zoneColor, true, name)
-                }
-                eventHandlers={{
-                  click: () => handleMarkerClick(name),
-                }}
-              >
-                <Tooltip
-                  direction="top"
-                  offset={[0, -10]}
-                  className="custom-tooltip"
+            return allAreas.map(({ name, coord }) => {
+              const isPickup = selectedPickup === name;
+              const isDropoff = selectedDropoff === name;
+              
+              // Use PIN for selection, DOT for default
+              let icon;
+              if (isPickup) icon = createIcon('#3B82F6', 'pin', true, name);
+              else if (isDropoff) icon = createIcon('#10B981', 'pin', true, name);
+              else icon = iconCache[name];
+
+              return (
+                <Marker
+                  key={name}
+                  position={[coord.lat, coord.lng]}
+                  icon={icon}
+                  eventHandlers={{
+                    click: () => handleMarkerClick(name),
+                  }}
                 >
-                  <div className="text-center">
-                    <div className="font-semibold text-sm">{name}</div>
-                    {coord.zone && (
-                      <div className="text-xs text-gray-500">
-                        Zone {coord.zone} — ₦{(ZONE_PRICES[coord.zone] || 0).toLocaleString()}
-                      </div>
-                    )}
-                  </div>
-                </Tooltip>
-              </Marker>
-            );
-          })}
+                  <Tooltip
+                    direction="top"
+                    offset={[0, -10]}
+                    className="custom-tooltip"
+                  >
+                    <div className="text-center">
+                      <div className="font-semibold text-sm">{name}</div>
+                      {coord.zone && (
+                        <div className="text-xs text-gray-500">
+                          Zone {coord.zone} — ₦{(ZONE_PRICES[coord.zone] || 0).toLocaleString()}
+                        </div>
+                      )}
+                    </div>
+                  </Tooltip>
+                </Marker>
+              );
+            });
+          }, [allAreas, selectedPickup, selectedDropoff])}
         </MapContainer>
       </div>
 

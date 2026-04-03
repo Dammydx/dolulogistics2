@@ -1,9 +1,8 @@
 {
-  "name": "swifthaul-express",
+  "name": "dolulogistics",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "homepage": "https://dammydx.github.io/SwiftHaul/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
