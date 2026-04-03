@@ -84,8 +84,6 @@ const AdminMap = () => {
   const [selectedPickup, setSelectedPickup] = useState<string | null>(null);
   const [selectedDropoff, setSelectedDropoff] = useState<string | null>(null);
   const [quotePrice, setQuotePrice] = useState<number | null>(null);
-  const [isTwoFingerDrag, setIsTwoFingerDrag] = useState(false);
-  const [showGestureOverlay, setShowGestureOverlay] = useState(false);
   const polylineRef = useRef<L.Polyline>(null);
   const rafRef = useRef<number>();
 
@@ -146,8 +144,9 @@ const AdminMap = () => {
     let offset = 0;
     const animate = () => {
       offset = (offset - 0.5) % 24;
-      if (polylineRef.current) {
-        polylineRef.current.setStyle({ dashOffset: offset.toString() });
+      const el = polylineRef.current?.getElement() as SVGPathElement | null;
+      if (el) {
+        el.style.strokeDashoffset = offset.toString();
       }
       rafRef.current = requestAnimationFrame(animate);
     };
@@ -232,28 +231,7 @@ const AdminMap = () => {
           }
           .leaflet-grab { cursor: grab; }
           .leaflet-dragging .leaflet-grab { cursor: grabbing; }
-          
-          @keyframes pulse-gesture {
-            0% { transform: scale(1); opacity: 0.8; }
-            50% { transform: scale(1.1); opacity: 1; }
-            100% { transform: scale(1); opacity: 0.8; }
-          }
         `}</style>
-
-        {/* Two-finger gesture overlay */}
-        {showGestureOverlay && (
-          <div className="absolute inset-0 z-[2000] bg-black/60 backdrop-blur-[2px] flex items-center justify-center p-6 text-center animate-in fade-in duration-300">
-            <div className="bg-white/10 border border-white/20 rounded-3xl p-8 backdrop-blur-xl scale-in-95 duration-300">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/20 flex items-center justify-center animate-[pulse-gesture_2s_infinite]">
-                 <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A10.003 10.003 0 003 12c0-5.523 4.477-10 10-10s10 4.477 10 10a10.003 10.003 0 01-6.112 9.212l-.054.09m-3.44-2.04L12 21" />
-                 </svg>
-              </div>
-              <h4 className="text-white font-black text-lg uppercase tracking-wider mb-2">Use two fingers</h4>
-              <p className="text-white/80 text-sm font-medium">Use two fingers to move the map</p>
-            </div>
-          </div>
-        )}
 
         <MapContainer
           center={PORT_HARCOURT_CENTER}
@@ -261,26 +239,13 @@ const AdminMap = () => {
           style={{ height: '520px', width: '100%' }}
           zoomControl={true}
           attributionControl={false}
-          dragging={!L.Browser.mobile || isTwoFingerDrag}
+          dragging={false}
           scrollWheelZoom={false}
+          touchZoom={false}
+          doubleClickZoom={false}
+          boxZoom={false}
+          keyboard={false}
         >
-          <div 
-            className="absolute inset-0 z-[1001] md:hidden"
-            style={{ pointerEvents: isTwoFingerDrag ? 'none' : 'auto' }}
-            onTouchStart={(e) => {
-              if (e.touches.length === 2) {
-                setIsTwoFingerDrag(true);
-                setShowGestureOverlay(false);
-              } else {
-                setIsTwoFingerDrag(false);
-                setShowGestureOverlay(true);
-                setTimeout(() => setShowGestureOverlay(false), 2000);
-              }
-            }}
-            onTouchEnd={() => {
-              setIsTwoFingerDrag(false);
-            }}
-          ></div>
           <TileLayer
             url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
           />

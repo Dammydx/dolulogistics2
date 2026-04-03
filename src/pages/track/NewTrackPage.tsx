@@ -369,13 +369,13 @@ const NewTrackPage = () => {
               </div>
 
               {/* Delivery Map */}
-              {pickupAreaName && dropoffAreaName && (
                 <TrackingMap
                   pickupAreaName={pickupAreaName}
                   dropoffAreaName={dropoffAreaName}
+                  pickupAddress={booking.pickup_address}
+                  dropoffAddress={booking.dropoff_address}
                   status={booking.status}
                 />
-              )}
 
               {/* Timeline */}
               {history.length > 0 && (

@@ -1,7 +1,7 @@
-import { useEffect, useState, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
+import { useEffect, useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { Maximize2, Minimize2, MapPin, Navigation, CheckCircle2 } from 'lucide-react';
+import { MapPin, Navigation, CheckCircle2 } from 'lucide-react';
 import { getAreaCoordinates } from '../../utils/areaCoordinates';
 import 'leaflet/dist/leaflet.css';
 
@@ -12,19 +12,6 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
-
-// Map resize handler for fullscreen
-const MapResizeHandler = ({ isFullscreen }: { isFullscreen: boolean }) => {
-  const map = useMap();
-  useEffect(() => {
-    // Invalidate multiple times during transition and after
-    const intervals = [100, 300, 600, 1000];
-    intervals.forEach(ms => {
-      setTimeout(() => map.invalidateSize(), ms);
-    });
-  }, [isFullscreen, map]);
-  return null;
-};
 
 // Custom SVG drop pin marker
 const createIcon = (color: string, pulse: boolean = false, label?: string) => {
@@ -59,6 +46,27 @@ const createIcon = (color: string, pulse: boolean = false, label?: string) => {
   });
 };
 
+// Pulse dot icon helper for the route
+const createDotIcon = (color: string, delay: number) => {
+  const hex = color.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  const rgb = `${r}, ${g}, ${b}`;
+
+  return L.divIcon({
+    className: 'custom-div-icon',
+    html: `
+      <div class="relative flex items-center justify-center pointer-events-none" style="width: 14px; height: 14px;">
+        <div class="w-2 h-2 rounded-full z-10" style="background-color: ${color};"></div>
+        <div class="absolute inset-0 rounded-full tracking-pin-pulse" style="--pulse-color: ${rgb}; background-color: ${color}; animation-delay: ${delay}s;"></div>
+      </div>
+    `,
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+  });
+};
+
 // Auto-fit map bounds
 const FitBounds = ({ bounds }: { bounds: L.LatLngBoundsExpression }) => {
   const map = useMap();
@@ -68,20 +76,27 @@ const FitBounds = ({ bounds }: { bounds: L.LatLngBoundsExpression }) => {
   return null;
 };
 
+// Interpolation helper for points along a line
+const getInterpolatedPoints = (start: [number, number], end: [number, number], count: number) => {
+  const points: [number, number][] = [];
+  for (let i = 1; i < count; i++) {
+    const lat = start[0] + (end[0] - start[0]) * (i / count);
+    const lng = start[1] + (end[1] - start[1]) * (i / count);
+    points.push([lat, lng]);
+  }
+  return points;
+};
+
 interface TrackingMapProps {
   pickupAreaName: string;
   dropoffAreaName: string;
   status: string;
+  pickupAddress: string;
+  dropoffAddress: string;
 }
 
-const TrackingMap = ({ pickupAreaName, dropoffAreaName, status }: TrackingMapProps) => {
-  const [isFullscreen, setIsFullscreen] = useState(false);
+const TrackingMap = ({ pickupAreaName, dropoffAreaName, status, pickupAddress, dropoffAddress }: TrackingMapProps) => {
   const [isCardExpanded, setIsCardExpanded] = useState(true);
-  const [isTwoFingerDrag, setIsTwoFingerDrag] = useState(false);
-  const [showGestureOverlay, setShowGestureOverlay] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const polylineRef = useRef<L.Polyline>(null);
-  const rafRef = useRef<number>();
 
   const pickupCoord = getAreaCoordinates(pickupAreaName);
   const dropoffCoord = getAreaCoordinates(dropoffAreaName);
@@ -173,60 +188,14 @@ const TrackingMap = ({ pickupAreaName, dropoffAreaName, status }: TrackingMapPro
 
   const config = statusConfig[status] || statusConfig.pending;
 
-  const toggleFullscreen = () => {
-    if (!isFullscreen) {
-      containerRef.current?.requestFullscreen?.();
-    } else {
-      document.exitFullscreen?.();
-    }
-    setIsFullscreen(!isFullscreen);
-  };
-
-  useEffect(() => {
-    const handler = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener('fullscreenchange', handler);
-    return () => document.removeEventListener('fullscreenchange', handler);
-  }, []);
-
-  // Manual Path Animation (requestAnimationFrame) - Bulletproof v4
-  useEffect(() => {
-    if (!polylineRef.current || status !== 'in_progress') {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      return;
-    }
-
-    let offset = 0;
-    const animate = () => {
-      offset = (offset - 0.5) % 24;
-      if (polylineRef.current) {
-        polylineRef.current.setStyle({ dashOffset: offset.toString() });
-      }
-      rafRef.current = requestAnimationFrame(animate);
-    };
-
-    rafRef.current = requestAnimationFrame(animate);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    }
-  }, [status]);
-
-  const fullRouteDashed: [number, number][] = config.showRoute ? [pickupLatLng, dropoffLatLng] : [];
+  // Generate intermediate points for dots
+  const routePoints = config.showRoute ? getInterpolatedPoints(pickupLatLng, dropoffLatLng, 12) : [];
 
   return (
     <div className="mb-8 space-y-4">
       <style>{`
-        .flowing-route {
-          stroke-dasharray: 12 !important;
-        }
         .leaflet-grab { cursor: grab; }
         .leaflet-dragging .leaflet-grab { cursor: grabbing; }
-        
-        /* Mobile gesture overlay pulse */
-        @keyframes pulse-gesture {
-          0% { transform: scale(1); opacity: 0.8; }
-          50% { transform: scale(1.1); opacity: 1; }
-          100% { transform: scale(1); opacity: 0.8; }
-        }
       `}</style>
 
       {/* Map Section Header */}
@@ -243,30 +212,10 @@ const TrackingMap = ({ pickupAreaName, dropoffAreaName, status }: TrackingMapPro
 
       {/* Main Square Edge Card */}
       <div
-        ref={containerRef}
-        className={`relative overflow-hidden bg-white shadow-sm border border-gray-200 transition-all duration-500 flex flex-col ${
-          isFullscreen 
-            ? 'fixed inset-0 z-[9999] h-[100dvh] w-screen rounded-none' 
-            : 'w-full h-[400px] md:h-[550px] rounded-[1.5rem] md:rounded-[2rem]'
-        }`}
+        className="relative overflow-hidden bg-white shadow-sm border border-gray-200 transition-all duration-500 flex flex-col w-full h-[400px] md:h-[550px] rounded-[1.5rem] md:rounded-[2rem]"
       >
         {/* Map Container */}
         <div className="relative flex-1 min-h-[350px] md:min-h-[450px]">
-          {/* Two-finger gesture overlay */}
-          {showGestureOverlay && (
-            <div className="absolute inset-0 z-[2000] bg-black/60 backdrop-blur-[2px] flex items-center justify-center p-6 text-center animate-in fade-in duration-300">
-              <div className="bg-white/10 border border-white/20 rounded-3xl p-8 backdrop-blur-xl scale-in-95 duration-300">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/20 flex items-center justify-center animate-[pulse-gesture_2s_infinite]">
-                   <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A10.003 10.003 0 003 12c0-5.523 4.477-10 10-10s10 4.477 10 10a10.003 10.003 0 01-6.112 9.212l-.054.09m-3.44-2.04L12 21" />
-                   </svg>
-                </div>
-                <h4 className="text-white font-black text-lg uppercase tracking-wider mb-2">Use two fingers</h4>
-                <p className="text-white/80 text-sm font-medium">Use two fingers to move the map</p>
-              </div>
-            </div>
-          )}
-
           <MapContainer
             center={bounds[0]}
             zoom={13}
@@ -277,119 +226,101 @@ const TrackingMap = ({ pickupAreaName, dropoffAreaName, status }: TrackingMapPro
             }}
             zoomControl={false}
             attributionControl={false}
-            dragging={!L.Browser.mobile || isTwoFingerDrag}
+            dragging={false}
             scrollWheelZoom={false}
+            touchZoom={false}
+            doubleClickZoom={false}
+            boxZoom={false}
+            keyboard={false}
           >
-            <div 
-              className="absolute inset-0 z-[1001] md:hidden"
-              style={{ pointerEvents: isTwoFingerDrag ? 'none' : 'auto' }}
-              onTouchStart={(e) => {
-                if (e.touches.length === 2) {
-                  setIsTwoFingerDrag(true);
-                  setShowGestureOverlay(false);
-                } else {
-                  setIsTwoFingerDrag(false);
-                  setShowGestureOverlay(true);
-                  // Auto-hide after 2 seconds
-                  setTimeout(() => setShowGestureOverlay(false), 2000);
-                }
-              }}
-              onTouchEnd={() => {
-                setIsTwoFingerDrag(false);
-              }}
-            ></div>
-            <MapResizeHandler isFullscreen={isFullscreen} />
+            <FitBounds bounds={bounds} />
             <TileLayer
               url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
             />
-            <FitBounds bounds={bounds} />
 
             {/* Floating Top-Right Mini Card */}
-            {!isFullscreen && (
-              <div className={`absolute top-3 right-3 z-[1001] transition-all duration-300 origin-top-right ${
-                isCardExpanded ? 'w-[140px] md:w-[220px]' : 'w-9 h-9'
+            <div className={`absolute top-3 right-3 z-[1001] transition-all duration-300 origin-top-right ${
+              isCardExpanded ? 'w-[140px] md:w-[220px]' : 'w-9 h-9'
+            }`}>
+              <div className={`bg-white/90 backdrop-blur-xl shadow-2xl border border-white/20 rounded-2xl overflow-hidden ring-1 ring-black/5 transition-all ${
+                isCardExpanded ? 'p-3 md:p-5' : 'p-0 h-9 w-9 flex items-center justify-center'
               }`}>
-                <div className={`bg-white/90 backdrop-blur-xl shadow-2xl border border-white/20 rounded-2xl overflow-hidden ring-1 ring-black/5 transition-all ${
-                  isCardExpanded ? 'p-3 md:p-5' : 'p-0 h-9 w-9 flex items-center justify-center'
-                }`}>
-                  {isCardExpanded ? (
-                    <>
-                      <div className="flex items-center justify-between mb-3 md:mb-4">
-                        <div className="flex items-center gap-1">
-                          <div className="w-1 md:w-1.5 h-1 md:h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
-                          <span className="text-[6px] md:text-[9px] font-black text-gray-400 uppercase tracking-[0.1em] md:tracking-[0.2em]">Route Details</span>
-                        </div>
-                        <button 
-                          onClick={() => setIsCardExpanded(false)}
-                          className="p-0.5 md:p-1 hover:bg-gray-100 rounded-lg transition-colors"
-                        >
-                          <svg className="w-2.5 h-2.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
-                        </button>
+                {isCardExpanded ? (
+                  <>
+                    <div className="flex items-center justify-between mb-3 md:mb-4">
+                      <div className="flex items-center gap-1">
+                        <div className="w-1 md:w-1.5 h-1 md:h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
+                        <span className="text-[6px] md:text-[9px] font-black text-gray-400 uppercase tracking-[0.1em] md:tracking-[0.2em]">Route Details</span>
                       </div>
+                      <button 
+                        onClick={() => setIsCardExpanded(false)}
+                        className="p-0.5 md:p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <svg className="w-2.5 h-2.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+                      </button>
+                    </div>
+                    
+                    <div className="relative pl-2 md:pl-3 border-l border-dashed border-gray-100 space-y-3 md:space-y-4">
+                      <div className="absolute -left-[3.5px] top-0 w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                      <div className="absolute -left-[3.5px] bottom-0 w-1.5 h-1.5 rounded-full bg-green-500"></div>
                       
-                      <div className="relative pl-2 md:pl-3 border-l border-dashed border-gray-100 space-y-3 md:space-y-4">
-                        <div className="absolute -left-[3.5px] top-0 w-1.5 h-1.5 rounded-full bg-blue-500"></div>
-                        <div className="absolute -left-[3.5px] bottom-0 w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                        
-                        <div>
-                          <div className="text-[6px] text-gray-400 uppercase font-black mb-0.5">Origin</div>
-                          <div className="text-[8px] md:text-[11px] font-black text-gray-900 leading-tight truncate">{pickupAreaName}</div>
-                        </div>
-                        <div>
-                          <div className="text-[6px] text-gray-400 uppercase font-black mb-0.5">Dest.</div>
-                          <div className="text-[8px] md:text-[11px] font-black text-gray-900 leading-tight truncate">{dropoffAreaName}</div>
-                        </div>
+                      <div>
+                        <div className="text-[6px] text-gray-400 uppercase font-black mb-0.5">Origin</div>
+                        <div className="text-[8px] md:text-[11px] font-black text-gray-900 leading-tight truncate">{pickupAreaName}</div>
                       </div>
-                    </>
-                  ) : (
-                    <button 
-                      onClick={() => setIsCardExpanded(true)}
-                      className="w-full h-full flex items-center justify-center bg-white hover:bg-gray-50 transition-colors"
-                      title="Show details"
-                    >
-                      <svg className="w-3.5 h-3.5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" /></svg>
-                    </button>
-                  )}
-                </div>
+                      <div>
+                        <div className="text-[6px] text-gray-400 uppercase font-black mb-0.5">Dest.</div>
+                        <div className="text-[8px] md:text-[11px] font-black text-gray-900 leading-tight truncate">{dropoffAreaName}</div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <button 
+                    onClick={() => setIsCardExpanded(true)}
+                    className="w-full h-full flex items-center justify-center bg-white hover:bg-gray-50 transition-colors"
+                    title="Show details"
+                  >
+                    <svg className="w-3.5 h-3.5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" /></svg>
+                  </button>
+                )}
               </div>
-            )}
+            </div>
 
-            {/* Flowing route */}
-            {fullRouteDashed.length > 0 && (
-              <Polyline
-                ref={polylineRef}
-                positions={fullRouteDashed}
-                pathOptions={{
-                  color: config.routeColor,
-                  weight: status === 'in_progress' ? 5 : 2.5,
-                  opacity: status === 'in_progress' ? 0.95 : 0.6,
-                  dashArray: status === 'in_progress' ? '12' : 'none',
-                  className: status === 'in_progress' ? 'flowing-route' : '',
-                }}
+            {/* Flowing Animated Dots */}
+            {routePoints.map((point, index) => (
+              <Marker
+                key={`dot-${index}`}
+                position={point}
+                icon={createDotIcon(config.routeColor, index * 0.25)}
               />
-            )}
+            ))}
 
             {/* Pickup Marker */}
             <Marker
               position={pickupLatLng}
               icon={createIcon(config.pickupColor, true, pickupAreaName)}
-            />
+            >
+              <Popup className="custom-address-popup">
+                <div className="p-1">
+                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Pickup Address</div>
+                  <div className="text-sm font-bold text-gray-900">{pickupAddress}</div>
+                </div>
+              </Popup>
+            </Marker>
 
             {/* Dropoff Marker */}
             <Marker
               position={dropoffLatLng}
               icon={createIcon(config.dropoffColor, true, dropoffAreaName)}
-            />
+            >
+              <Popup className="custom-address-popup">
+                <div className="p-1">
+                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Drop-off Address</div>
+                  <div className="text-sm font-bold text-gray-900">{dropoffAddress}</div>
+                </div>
+              </Popup>
+            </Marker>
           </MapContainer>
-
-          {/* Fullscreen toggle button on top of map */}
-          <button
-            onClick={toggleFullscreen}
-            className="absolute top-4 right-4 z-[1001] p-2.5 rounded-xl bg-white/80 backdrop-blur shadow-lg border border-white/50 hover:bg-white transition-all text-gray-500 active:scale-90"
-            title={isFullscreen ? 'Exit fullscreen' : 'View fullscreen'}
-          >
-            {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
-          </button>
 
           {/* Delivered Overlay (Top Left) - Non-obtrusive */}
           {status === 'delivered' && (

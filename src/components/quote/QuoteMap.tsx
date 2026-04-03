@@ -78,19 +78,15 @@ const QuoteMap = ({ pickupAreaName, dropoffAreaName }: QuoteMapProps) => {
         style={{ height: '100%', width: '100%', zIndex: 1 }}
         zoomControl={false}
         attributionControl={false}
-        dragging={typeof window !== 'undefined' && window.innerWidth > 768}
+        dragging={false}
         scrollWheelZoom={false}
-        touchZoom="center"
+        touchZoom={false}
+        doubleClickZoom={false}
+        boxZoom={false}
+        keyboard={false}
       >
         <MapHandler bounds={bounds} />
         <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
-        
-        {/* Overlay for 1-finger scroll on mobile */}
-        <div className="absolute inset-0 z-[2000] bg-black/40 backdrop-blur-[2px] flex items-center justify-center opacity-0 group-active:opacity-100 md:group-active:opacity-0 pointer-events-none transition-opacity duration-300">
-           <div className="bg-white/90 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-900 shadow-xl border border-white/20">
-              Use two fingers to move
-           </div>
-        </div>
         {/* Route Line */}
         <Polyline
           positions={[pickupLatLng, dropoffLatLng]}
