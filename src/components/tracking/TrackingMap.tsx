@@ -188,18 +188,6 @@ const TrackingMap = ({ pickupAreaName, dropoffAreaName, status }: TrackingMapPro
 
   return (
     <div className="mb-8 space-y-4">
-      <style>{`
-        .flowing-route {
-          stroke-dasharray: 12 !important;
-          animation: dash-flow 0.8s linear infinite !important;
-        }
-        @keyframes dash-flow {
-          to {
-            stroke-dashoffset: 24;
-          }
-        }
-      `}</style>
-
       {/* Map Section Header */}
       <div className="flex items-center gap-3 px-1">
         <div className="w-1.5 h-6 bg-primary-500 rounded-full"></div>

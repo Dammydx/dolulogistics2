@@ -27,4 +27,16 @@
   }
 }
 
+.flowing-route {
+  stroke-dasharray: 12 !important;
+  animation: dash-flow 0.8s linear infinite !important;
+}
 
+@keyframes dash-flow {
+  0% {
+    stroke-dashoffset: 24;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
