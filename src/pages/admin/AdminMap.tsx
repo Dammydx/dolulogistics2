@@ -27,11 +27,11 @@ const hexToRgb = (hex: string) => {
 const createIcon = (color: string, variant: 'pin' | 'dot' = 'dot', pulse: boolean = false, label?: string) => {
   const rgb = hexToRgb(color);
 
-  const pulseHtml = pulse 
+  const pulseHtml = pulse
     ? `<div class="absolute tracking-pin-pulse" style="--pulse-color: ${rgb}; width: 14px; height: 14px; border-radius: 50%; background: ${color}; bottom: -4px; left: 9px; opacity: 0.6; z-index: -1;"></div>`
     : '';
 
-  const labelHtml = label 
+  const labelHtml = label
     ? `<div class="absolute top-[100%] left-1/2 -translate-x-1/2 whitespace-nowrap bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded border border-gray-100 shadow-sm text-[9px] font-bold text-gray-700 mt-1 pointer-events-none uppercase tracking-tighter">${label}</div>`
     : '';
 
@@ -69,14 +69,20 @@ const createIcon = (color: string, variant: 'pin' | 'dot' = 'dot', pulse: boolea
 };
 
 // Route dot icon helper
-const createRouteDotIcon = (color: string, delay: number) => {
-  const rgb = hexToRgb(color);
+const createRouteDotIcon = (baseColor: string, pulseColor: string, delay: number, duration: number) => {
+  const rgb = hexToRgb(pulseColor);
   return L.divIcon({
     className: 'custom-div-icon',
     html: `
       <div class="relative flex items-center justify-center pointer-events-none" style="width: 14px; height: 14px;">
-        <div class="w-2 h-2 rounded-full z-10" style="background-color: ${color};"></div>
-        <div class="absolute inset-0 rounded-full tracking-pin-pulse" style="--pulse-color: ${rgb}; background-color: ${color}; animation-delay: ${delay}s;"></div>
+        <div class="w-3 h-3 rounded-full z-10" style="background-color: ${baseColor};"></div>
+        <div class="absolute inset-0 rounded-full" style="
+          --pulse-color: ${rgb};
+          background-color: ${pulseColor};
+          animation: routePulse ${duration}s cubic-bezier(0, 0, 0.2, 1) infinite;
+          animation-delay: ${delay}s;
+          opacity: 0;
+        "></div>
       </div>
     `,
     iconSize: [14, 14],
@@ -151,14 +157,19 @@ const AdminMap = () => {
 
     const pCoords: [number, number] = [p.coord.lat, p.coord.lng];
     const dCoords: [number, number] = [d.coord.lat, d.coord.lng];
-    
-    // Dynamic density (Synchronized scaling)
+
+    // Dynamic density (Synchronized scaling for clean aesthetic)
     const dist = Math.sqrt(Math.pow(pCoords[0] - dCoords[0], 2) + Math.pow(pCoords[1] - dCoords[1], 2));
-    const dotCount = Math.max(4, Math.min(25, Math.floor(dist * 100)));
-    
+    const dotCount = Math.max(3, Math.min(10, Math.floor(dist * 60)));
+    const dots = getInterpolatedPoints(pCoords, dCoords, dotCount);
+
+    // Travelling pulse timing: dots staggered by 0.25s + 1s pause at the end
+    const totalDuration = (dots.length * 0.25) + 1.0;
+
     return {
       coords: [pCoords, dCoords] as [number, number][],
-      dots: getInterpolatedPoints(pCoords, dCoords, dotCount)
+      dots,
+      totalDuration
     };
   }, [selectedPickup, selectedDropoff, allAreas]);
 
@@ -167,8 +178,18 @@ const AdminMap = () => {
 
   return (
     <div className="space-y-6">
-      <style>{`.leaflet-grab { cursor: grab; } .leaflet-dragging .leaflet-grab { cursor: grabbing; }`}</style>
-      
+      <style>{`
+        .leaflet-grab { cursor: grab; }
+        .leaflet-dragging .leaflet-grab { cursor: grabbing; }
+        
+        @keyframes routePulse {
+          0% { transform: scale(0.6); opacity: 0; box-shadow: 0 0 0 0 rgba(var(--pulse-color), 0); }
+          20% { transform: scale(1.4); opacity: 1; box-shadow: 0 0 14px 4px rgba(var(--pulse-color), 0.6); }
+          45% { transform: scale(2.2); opacity: 0; box-shadow: 0 0 20px 8px rgba(var(--pulse-color), 0); }
+          100% { transform: scale(2.2); opacity: 0; }
+        }
+      `}</style>
+
       {/* Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-black text-gray-900 flex items-center gap-3">
@@ -189,7 +210,7 @@ const AdminMap = () => {
               <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Pricing Panel</span>
             </div>
-            
+
             <div className="space-y-6">
               {/* Pickup Selection */}
               <div className={`p-4 rounded-2xl border transition-all ${selectedPickup ? 'bg-blue-50 border-blue-100' : 'bg-gray-50 border-gray-100'}`}>
@@ -226,7 +247,7 @@ const AdminMap = () => {
                   Standard Rate
                 </div>
               </div>
-              <button 
+              <button
                 onClick={clearSelection}
                 className="w-full py-3 bg-gray-900 text-white rounded-xl font-black uppercase text-xs tracking-widest hover:bg-black transition-all active:scale-95 flex items-center justify-center gap-2"
               >
@@ -236,9 +257,9 @@ const AdminMap = () => {
             </div>
           ) : (
             <div className="mt-8 p-4 bg-amber-50 rounded-2xl border border-amber-100">
-               <p className="text-amber-800 text-xs font-bold leading-relaxed">
-                 Select both a pickup and a destination on the map to see the calculated delivery cost for that route.
-               </p>
+              <p className="text-amber-800 text-xs font-bold leading-relaxed">
+                Select both a pickup and a destination on the map to see the calculated delivery cost for that route.
+              </p>
             </div>
           )}
         </div>
@@ -274,12 +295,12 @@ const AdminMap = () => {
               />
             )}
 
-            {/* Dynamic Route Dots */}
+            {/* Dynamic Route Dots with Travelling Energy Pulse */}
             {routeData && routeData.dots.map((point, index) => (
               <Marker
                 key={`dot-${index}`}
                 position={point}
-                icon={createRouteDotIcon('#E8792F', index * 0.25)}
+                icon={createRouteDotIcon('#E8792F', '#FDE047', index * 0.25, routeData.totalDuration)}
               />
             ))}
 
@@ -294,7 +315,7 @@ const AdminMap = () => {
               return allAreas.map(({ name, coord }) => {
                 const isPickup = selectedPickup === name;
                 const isDropoff = selectedDropoff === name;
-                
+
                 let icon;
                 if (isPickup) icon = createIcon('#3B82F6', 'pin', true, name);
                 else if (isDropoff) icon = createIcon('#10B981', 'pin', true, name);

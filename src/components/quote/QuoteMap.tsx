@@ -22,7 +22,7 @@ const createIcon = (color: string, label: string) => {
   const rgb = `${r}, ${g}, ${b}`;
 
   const pulseHtml = `<div class="absolute tracking-pin-pulse" style="--pulse-color: ${rgb}; width: 14px; height: 14px; border-radius: 50%; background: ${color}; bottom: -4px; left: 9px; opacity: 0.6; z-index: -1;"></div>`;
-  
+
   const labelHtml = `<div class="absolute top-[100%] left-1/2 -translate-x-1/2 whitespace-nowrap bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded border border-gray-100 shadow-sm text-[9px] font-black text-gray-700 mt-1 pointer-events-none uppercase tracking-tighter">${label}</div>`;
 
   return L.divIcon({
@@ -43,8 +43,8 @@ const createIcon = (color: string, label: string) => {
 };
 
 // Pulse dot icon helper for the route
-const createDotIcon = (color: string, delay: number) => {
-  const hex = color.replace('#', '');
+const createDotIcon = (baseColor: string, pulseColor: string, delay: number, duration: number) => {
+  const hex = pulseColor.replace('#', '');
   const r = parseInt(hex.substring(0, 2), 16);
   const g = parseInt(hex.substring(2, 4), 16);
   const b = parseInt(hex.substring(4, 6), 16);
@@ -54,8 +54,14 @@ const createDotIcon = (color: string, delay: number) => {
     className: 'custom-div-icon',
     html: `
       <div class="relative flex items-center justify-center pointer-events-none" style="width: 14px; height: 14px;">
-        <div class="w-2 h-2 rounded-full z-10" style="background-color: ${color};"></div>
-        <div class="absolute inset-0 rounded-full tracking-pin-pulse" style="--pulse-color: ${rgb}; background-color: ${color}; animation-delay: ${delay}s;"></div>
+        <div class="w-2 h-2 rounded-full z-10" style="background-color: ${baseColor};"></div>
+        <div class="absolute inset-0 rounded-full" style="
+          --pulse-color: ${rgb};
+          background-color: ${pulseColor};
+          animation: routePulse ${duration}s cubic-bezier(0, 0, 0.2, 1) infinite;
+          animation-delay: ${delay}s;
+          opacity: 0;
+        "></div>
       </div>
     `,
     iconSize: [14, 14],
@@ -66,9 +72,10 @@ const createDotIcon = (color: string, delay: number) => {
 // Interpolation helper for points along a line
 const getInterpolatedPoints = (start: [number, number], end: [number, number], count: number) => {
   const points: [number, number][] = [];
-  for (let i = 1; i < count; i++) {
-    const lat = start[0] + (end[0] - start[0]) * (i / count);
-    const lng = start[1] + (end[1] - start[1]) * (i / count);
+  // Using count + 1 to ensure even distribution between the two pins
+  for (let i = 1; i <= count; i++) {
+    const lat = start[0] + (end[0] - start[0]) * (i / (count + 1));
+    const lng = start[1] + (end[1] - start[1]) * (i / (count + 1));
     points.push([lat, lng]);
   }
   return points;
@@ -100,21 +107,33 @@ const QuoteMap = ({ pickupAreaName, dropoffAreaName }: QuoteMapProps) => {
   const dropoffLatLng: [number, number] = [dropoffCoord.lat, dropoffCoord.lng];
   const bounds: L.LatLngBoundsExpression = [pickupLatLng, dropoffLatLng];
 
-  // Dynamic dot generation based on city-scale distance
+  // Dynamic dot generation: Reduced count to prevent clustering on mobile
   const dist = Math.sqrt(
-    Math.pow(pickupLatLng[0] - dropoffLatLng[0], 2) + 
+    Math.pow(pickupLatLng[0] - dropoffLatLng[0], 2) +
     Math.pow(pickupLatLng[1] - dropoffLatLng[1], 2)
   );
-  const dotCount = Math.max(4, Math.min(25, Math.floor(dist * 100)));
+
+  // We cap the dots between 3 and 10 to keep it minimal and professional
+  const dotCount = Math.max(3, Math.min(10, Math.floor(dist * 60)));
   const routePoints = getInterpolatedPoints(pickupLatLng, dropoffLatLng, dotCount);
+
+  // Travelling pulse timing: dots staggered by 0.25s + 1s pause at the end
+  const totalDuration = (routePoints.length * 0.25) + 1.0;
 
   return (
     <div className="relative w-full aspect-square md:aspect-square bg-white rounded-[1.5rem] md:rounded-[2rem] border border-gray-200 overflow-hidden shadow-sm animate-in fade-in zoom-in duration-500 group">
       <style>{`
         .leaflet-grab { cursor: grab; }
         .leaflet-dragging .leaflet-grab { cursor: grabbing; }
+        
+        @keyframes routePulse {
+          0% { transform: scale(0.6); opacity: 0; box-shadow: 0 0 0 0 rgba(var(--pulse-color), 0); }
+          20% { transform: scale(1.4); opacity: 1; box-shadow: 0 0 14px 4px rgba(var(--pulse-color), 0.6); }
+          45% { transform: scale(2.2); opacity: 0; box-shadow: 0 0 20px 8px rgba(var(--pulse-color), 0); }
+          100% { transform: scale(2.2); opacity: 0; }
+        }
       `}</style>
-      
+
       {/* Map */}
       <MapContainer
         center={PORT_HARCOURT_CENTER}
@@ -131,30 +150,30 @@ const QuoteMap = ({ pickupAreaName, dropoffAreaName }: QuoteMapProps) => {
       >
         <MapHandler bounds={bounds} />
         <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
-        
+
         {/* Damp Guiding Line (Dashed) */}
         <Polyline
           positions={[pickupLatLng, dropoffLatLng]}
           pathOptions={{
             color: '#E8792F',
-            weight: 2.5,
-            opacity: 0.25,
-            dashArray: '5, 12'
+            weight: 2,
+            opacity: 0.15,
+            dashArray: '4, 8'
           }}
         />
 
-        {/* Dynamic Pulsing Route Dots */}
+        {/* Dynamic Pulsing Route Dots with Travelling Energy Pulse */}
         {routePoints.map((point, index) => (
           <Marker
             key={`dot-${index}`}
             position={point}
-            icon={createDotIcon('#E8792F', index * 0.25)}
+            icon={createDotIcon('#E8792F', '#FDE047', index * 0.25, totalDuration)}
           />
         ))}
 
         {/* Pickup Pin */}
         <Marker position={pickupLatLng} icon={createIcon('#3B82F6', pickupAreaName)} />
-        
+
         {/* Dropoff Pin */}
         <Marker position={dropoffLatLng} icon={createIcon('#10B981', dropoffAreaName)} />
       </MapContainer>
