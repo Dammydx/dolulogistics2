@@ -504,7 +504,7 @@ const AdminReports = () => {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Delivered</p>
-            <p className="text-2xl font-bold text-gray-100">
+            <p className="text-2xl font-bold text-gray-900">
               {metrics.delivered}
             </p>
           </div>

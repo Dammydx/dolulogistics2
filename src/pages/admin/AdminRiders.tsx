@@ -25,6 +25,7 @@ const AdminRiders = () => {
   
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [selectedRider, setSelectedRider] = useState<Rider | null>(null);
   
@@ -145,6 +146,34 @@ const AdminRiders = () => {
     }
   };
 
+  const handleEditRider = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedRider || !fullName || !phoneNumber) return;
+
+    try {
+      setIsSubmitting(true);
+      const { error } = await supabase
+        .from('riders')
+        .update({ 
+          full_name: fullName,
+          phone_number: phoneNumber 
+        })
+        .eq('id', selectedRider.id);
+
+      if (error) throw error;
+
+      toast.success('Rider updated successfully');
+      setShowEditModal(false);
+      resetForm();
+      setSelectedRider(null);
+      fetchRiders();
+    } catch (err) {
+      toast.error('Failed to update rider');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const resetForm = () => {
     setFullName('');
     setUsername('');
@@ -253,6 +282,18 @@ const AdminRiders = () => {
                     </div>
                     <div className="flex flex-col gap-2">
                        <button
+                        onClick={() => {
+                          setSelectedRider(rider);
+                          setFullName(rider.full_name);
+                          setPhoneNumber(rider.phone_number);
+                          setShowEditModal(true);
+                        }}
+                        className="flex items-center gap-2 px-3 py-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all text-xs font-bold uppercase tracking-tighter"
+                      >
+                        <UserPlus className="w-3.5 h-3.5" />
+                        Edit Info
+                      </button>
+                      <button
                         onClick={() => {
                           setSelectedRider(rider);
                           setShowResetModal(true);
@@ -441,6 +482,69 @@ const AdminRiders = () => {
                   className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-black transition-all active:scale-95 disabled:bg-gray-200"
                 >
                   {isSubmitting ? 'Updating...' : 'Confirm Reset'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Edit Rider Modal */}
+      {showEditModal && selectedRider && (
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+           <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-3xl shadow-custom-lg max-w-md w-full p-8"
+          >
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Edit Personnel Info</h2>
+              <button 
+                onClick={() => {
+                  setShowEditModal(false);
+                  resetForm();
+                  setSelectedRider(null);
+                }} 
+                className="p-2 hover:bg-gray-100 rounded-xl transition-all"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <p className="text-xs font-medium text-gray-500 mb-6">
+              Update details for <span className="text-gray-900 font-bold">@{selectedRider.username}</span>.
+            </p>
+
+            <form onSubmit={handleEditRider} className="space-y-5">
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Full Name</label>
+                <input 
+                  type="text" 
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Full Name"
+                  className="w-full px-5 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary-500/20 text-sm font-bold"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Phone Number</label>
+                <input 
+                  type="tel" 
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="+234..."
+                  className="w-full px-5 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary-500/20 text-sm font-bold"
+                />
+              </div>
+
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !fullName || !phoneNumber}
+                  className="w-full py-4 bg-primary-500 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-primary-600 transition-all active:scale-95 disabled:bg-gray-200"
+                >
+                  {isSubmitting ? 'Updating...' : 'Save Changes'}
                 </button>
               </div>
             </form>
