@@ -32,7 +32,6 @@ import {
   Send,
   User,
   MapPin,
-  DollarSign,
   Home,
   Check,
 } from 'lucide-react';
@@ -48,6 +47,8 @@ import {
 import { calculatePriceQuote, fetchAddons, formatPrice } from '../../utils/pricing';
 import { createBooking, fetchItemCategories } from '../../utils/bookings';
 import type { State, City, Area, Addon, ItemCategory, PriceQuote } from '../../types/database';
+
+import NairaIcon from '../../components/icons/NairaIcon';
 
 const NewRequestPickupPage = () => {
   const location = useLocation();
@@ -384,6 +385,7 @@ const NewRequestPickupPage = () => {
               </div>
             </motion.div>
 
+
             {/* Payment Information Card */}
             <motion.div
               className="bg-slate-50 border border-slate-200 rounded-xl shadow-lg p-6"
@@ -391,9 +393,9 @@ const NewRequestPickupPage = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.3 }}
             >
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                  <DollarSign className="w-5 h-5 text-primary-600" />
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                  <NairaIcon size={16} className="text-primary-600" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">Payment Information</h3>
@@ -914,8 +916,8 @@ const NewRequestPickupPage = () => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.4, delay: 0.6 }}
                 >
-                  <h3 className="text-xl font-semibold mb-4 flex items-center">
-                    <DollarSign className="w-5 h-5 mr-2 text-primary-500" />
+                  <h3 className="text-xl font-semibold mb-4 flex items-center text-primary-900">
+                    <NairaIcon size={20} className="mr-2 text-primary-500" />
                     Price Summary
                   </h3>
 

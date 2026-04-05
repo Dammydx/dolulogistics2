@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, User, Clock, Package, Truck } from 'lucide-react';
+import { Calendar, MapPin, User, Package } from 'lucide-react';
 import { Parcel } from '../../../types/supabase';
-import QRCode from 'react-qr-code';
+
 
 type TrackingDetailsProps = {
   parcel: Parcel;
@@ -34,6 +34,9 @@ const formatDate = (dateString: string) => {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
   });
 };
 

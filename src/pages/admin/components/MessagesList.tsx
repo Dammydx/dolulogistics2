@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Message } from '../../../types/supabase';
-import { Search, ChevronDown, ChevronUp, Trash, CheckCircle, Mail } from 'lucide-react';
+import { Search, Trash, CheckCircle, Mail } from 'lucide-react';
 
 type MessagesListProps = {
   messages: Message[];
@@ -10,8 +10,8 @@ type MessagesListProps = {
 
 const MessagesList = ({ messages, onToggleRead, onDelete }: MessagesListProps) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState('created_at');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [sortField] = useState('created_at');
+  const [sortDirection] = useState<'asc' | 'desc'>('desc');
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-NG', {
@@ -20,17 +20,11 @@ const MessagesList = ({ messages, onToggleRead, onDelete }: MessagesListProps) =
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      hour12: true,
     });
   };
 
-  const handleSort = (field: string) => {
-    if (field === sortField) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
+// Sorting Logic
 
   const filteredMessages = messages.filter((message) => {
     const searchString = searchTerm.toLowerCase();

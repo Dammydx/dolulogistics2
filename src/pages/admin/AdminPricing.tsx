@@ -5,7 +5,6 @@ import {
   Plus,
   Edit2,
   Trash2,
-  DollarSign,
   Package as PackageIcon,
   Check,
   X,
@@ -51,6 +50,8 @@ interface Addon {
 }
 
 // ─── Component ──────────────────────────────────────────────────
+
+import NairaIcon from '../../components/icons/NairaIcon';
 
 const AdminPricing = () => {
   const [activeTab, setActiveTab] = useState<'areas' | 'zones' | 'addons'>('areas');
@@ -515,7 +516,7 @@ const AdminPricing = () => {
                 : 'text-gray-600 hover:text-gray-700'
             }`}
           >
-            <DollarSign className="h-4 w-4 inline mr-1.5" />
+            <NairaIcon className="h-4 w-4 inline mr-1.5" />
             Zone Rates ({zones.length})
           </button>
           <button
@@ -841,7 +842,7 @@ const AdminPricing = () => {
 
             {getUniqueDestinationRates().length === 0 ? (
               <div className="text-center py-12 text-gray-500">
-                <DollarSign className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                <NairaIcon className="h-12 w-12 mx-auto mb-3 opacity-30" />
                 <p>No zone rates configured</p>
               </div>
             ) : (

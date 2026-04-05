@@ -111,8 +111,21 @@ export interface ItemCategory {
 }
 
 // ============================================================
-// BOOKING TYPES
+// RIDER TYPES
 // ============================================================
+
+export type RiderStatus = 'active' | 'archived';
+
+export interface Rider {
+  id: string;
+  username: string;
+  pin_code: string;
+  full_name: string;
+  phone_number: string;
+  status: RiderStatus;
+  created_at: string;
+  updated_at: string;
+}
 
 /**
  * Booking status flow:
@@ -178,9 +191,10 @@ export interface Booking {
   price_total: number;
   addons_selected: string[] | null;
 
-  // Rider (text fields only)
+  // Rider (text fields + link)
   rider_name: string | null;
   rider_phone: string | null;
+  assigned_rider_id: string | null;
 
   // Status
   status: BookingStatus;
@@ -369,6 +383,7 @@ export interface BookingWithDetails extends Booking {
   pickup_area?: Area;
   dropoff_area?: Area;
   item_category?: ItemCategory;
+  assigned_rider?: Rider;
   history?: BookingStatusHistory[];
 }
 

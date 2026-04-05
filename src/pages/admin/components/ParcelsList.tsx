@@ -34,7 +34,14 @@ const ParcelsList = ({ parcels, isLoading, error, onEdit, onDelete }: ParcelsLis
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-NG');
+    return new Date(dateString).toLocaleDateString('en-NG', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
   };
 
   const handleSort = (field: string) => {

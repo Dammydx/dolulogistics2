@@ -184,7 +184,14 @@ const AdminRequests = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(request.submitted_at).toLocaleDateString()}
+                      {new Date(request.submitted_at).toLocaleDateString('en-NG', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true,
+                      })}
                     </td>
                     <td className="px-6 py-4 text-right text-sm font-medium">
                       <select

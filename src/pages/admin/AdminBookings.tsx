@@ -5,21 +5,24 @@ import {
   Booking,
   BookingStatus,
   BookingStatusHistory,
+  Rider,
 } from '../../types/database';
 import {
+  Package as PackageIcon,
+  MapPin,
+  User,
+  Phone,
+  History,
+  CheckCircle,
+  Send,
   Search,
   X,
   Eye,
-  CheckCircle,
-  Phone,
-  MapPin,
-  Package as PackageIcon,
-  History,
-  Send,
-  User,
   Copy,
   MessageCircle,
+  TrendingUp
 } from 'lucide-react';
+import NotificationCenter from './components/NotificationCenter';
 
 
 const AdminBookings = () => {
@@ -42,6 +45,8 @@ const AdminBookings = () => {
   const [selectedItemCategoryName, setSelectedItemCategoryName] = useState<string>('');
   const [selectedPickupAreaName, setSelectedPickupAreaName] = useState<string>('');
   const [selectedDropoffAreaName, setSelectedDropoffAreaName] = useState<string>('');
+  const [riders, setRiders] = useState<Rider[]>([]);
+  const [selectedRiderId, setSelectedRiderId] = useState<string>('');
 
   const statuses: BookingStatus[] = [
     'pending',
@@ -54,6 +59,7 @@ const AdminBookings = () => {
 
   useEffect(() => {
     fetchBookings();
+    fetchRiders();
 
     const channel = supabase
       .channel('bookings-insert-listener')
@@ -116,6 +122,23 @@ const AdminBookings = () => {
       toast.error('Failed to load bookings');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchRiders = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('riders')
+        .select('*')
+        .eq('status', 'active')
+        .order('full_name', { ascending: true });
+
+      if (error) throw error;
+      if (data) {
+        setRiders(data);
+      }
+    } catch (err) {
+      console.error('Error fetching riders:', err);
     }
   };
 
@@ -230,6 +253,7 @@ A rider is on the way for your pickup and delivery. Thank you for trusting Dolu!
     setNewStatus(booking.status);
     setRiderName(booking.rider_name || '');
     setRiderPhone(booking.rider_phone || '');
+    setSelectedRiderId(booking.assigned_rider_id || '');
     setStatusNote('');
     setSelectedItemCategoryName('');
     setSelectedPickupAreaName('');
@@ -308,6 +332,7 @@ A rider is on the way for your pickup and delivery. Thank you for trusting Dolu!
           status: newStatus,
           rider_name: riderName || null,
           rider_phone: riderPhone || null,
+          assigned_rider_id: selectedRiderId || null,
         })
         .eq('id', selectedBooking.id);
 
@@ -322,8 +347,7 @@ A rider is on the way for your pickup and delivery. Thank you for trusting Dolu!
             status: newStatus,
             note:
               statusNote ||
-              `Status changed to ${getStatusLabel(newStatus)}${
-                riderName ? ` and assigned to ${riderName}` : ''
+              `Status changed to ${getStatusLabel(newStatus)}${riderName ? ` and assigned to ${riderName}` : ''
               }`,
             created_by: 'admin',
           },
@@ -403,7 +427,7 @@ A rider is on the way for your pickup and delivery. Thank you for trusting Dolu!
     // SMS sending is disabled for now
     toast.info('SMS sending feature is currently disabled');
     return;
-    
+
     // TODO: Implement SMS sending via Supabase Edge Function when ready
     // try {
     //   const { error } = await supabase.from('message_logs').insert([{...}]);
@@ -476,13 +500,25 @@ A rider is on the way for your pickup and delivery. Thank you for trusting Dolu!
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-          Dispatch Desk
-        </h1>
-        <p className="text-gray-600 text-sm mt-1">
-          Manage bookings and assign riders
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-black text-gray-900 uppercase tracking-tighter leading-tight">
+            Dispatch Desk
+          </h1>
+          <p className="text-gray-500 text-sm font-medium">
+            Monitor and manage fleet operations in real-time
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <NotificationCenter />
+          <button
+            onClick={fetchBookings}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 shadow-sm font-semibold text-sm"
+          >
+            <TrendingUp className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh Desk
+          </button>
+        </div>
       </div>
 
       {/* Search and Filter */}
@@ -506,11 +542,10 @@ A rider is on the way for your pickup and delivery. Thank you for trusting Dolu!
         <div className="flex flex-wrap gap-2 mt-4">
           <button
             onClick={() => setSelectedStatus('all')}
-            className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-              selectedStatus === 'all'
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${selectedStatus === 'all'
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+              }`}
           >
             All ({bookings.length})
           </button>
@@ -520,11 +555,10 @@ A rider is on the way for your pickup and delivery. Thank you for trusting Dolu!
               <button
                 key={status}
                 onClick={() => setSelectedStatus(status)}
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                  selectedStatus === status
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${selectedStatus === status
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                  }`}
               >
                 {getStatusLabel(status)} ({count})
               </button>
@@ -584,13 +618,12 @@ A rider is on the way for your pickup and delivery. Thank you for trusting Dolu!
                           value={booking.status}
                           onChange={(e) => handleQuickStatusUpdate(booking.id, e.target.value as BookingStatus)}
                           disabled={updatingBookingId === booking.id || booking.status === 'delivered'}
-                          className={`text-xs font-semibold px-3 py-1 rounded-full border-2 transition-colors cursor-pointer appearance-none pr-6 focus:outline-none focus:ring-2 focus:ring-offset-0 ${
-                            updatingBookingId === booking.id
+                          className={`text-xs font-semibold px-3 py-1 rounded-full border-2 transition-colors cursor-pointer appearance-none pr-6 focus:outline-none focus:ring-2 focus:ring-offset-0 ${updatingBookingId === booking.id
                               ? 'opacity-50 cursor-not-allowed'
                               : booking.status === 'delivered'
-                              ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                              : getStatusColor(booking.status)
-                          }`}
+                                ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                                : getStatusColor(booking.status)
+                            }`}
                           title={booking.status === 'delivered' ? 'Delivered status cannot be changed' : 'Click to change status'}
                         >
                           <option value={booking.status}>{getStatusLabel(booking.status)}</option>
@@ -655,13 +688,12 @@ A rider is on the way for your pickup and delivery. Thank you for trusting Dolu!
                         value={booking.status}
                         onChange={(e) => handleQuickStatusUpdate(booking.id, e.target.value as BookingStatus)}
                         disabled={updatingBookingId === booking.id || booking.status === 'delivered'}
-                        className={`text-xs font-semibold px-3 py-1 rounded-full border-2 transition-colors cursor-pointer appearance-none pr-6 focus:outline-none focus:ring-2 focus:ring-offset-0 ${
-                          updatingBookingId === booking.id
+                        className={`text-xs font-semibold px-3 py-1 rounded-full border-2 transition-colors cursor-pointer appearance-none pr-6 focus:outline-none focus:ring-2 focus:ring-offset-0 ${updatingBookingId === booking.id
                             ? 'opacity-50 cursor-not-allowed'
                             : booking.status === 'delivered'
-                            ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                            : getStatusColor(booking.status)
-                        }`}
+                              ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                              : getStatusColor(booking.status)
+                          }`}
                         title={booking.status === 'delivered' ? 'Delivered status cannot be changed' : 'Click to change status'}
                       >
                         <option value={booking.status}>{getStatusLabel(booking.status)}</option>
@@ -1025,7 +1057,14 @@ A rider is on the way for your pickup and delivery. Thank you for trusting Dolu!
                         </div>
                         <div className="flex-1 pt-1">
                           <p className="text-xs text-gray-600">
-                            {new Date(entry.created_at).toLocaleString()}
+                            {new Date(entry.created_at).toLocaleString('en-NG', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true,
+                            })}
                           </p>
                           <p className="text-sm font-medium text-gray-900">
                             {getCustomerStatusLabel(entry.status)}
@@ -1067,32 +1106,88 @@ A rider is on the way for your pickup and delivery. Thank you for trusting Dolu!
                         </option>
                       ))}
                     </select>
-                  </div>
+                    {newStatus === 'in_progress' && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-black text-primary-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                            <User className="w-3.5 h-3.5" /> Select Field Rider
+                          </label>
+                          <select
+                            value={selectedRiderId}
+                            onChange={(e) => {
+                              const riderId = e.target.value;
+                              setSelectedRiderId(riderId);
+                              const rider = riders.find(r => r.id === riderId);
+                              if (rider) {
+                                setRiderName(rider.full_name);
+                                setRiderPhone(rider.phone_number);
+                              } else {
+                                setRiderName('');
+                                setRiderPhone('');
+                              }
+                            }}
+                            className="w-full px-4 py-3 bg-primary-50 border-2 border-primary-100 rounded-xl focus:ring-2 focus:ring-primary-500/20 text-sm font-bold appearance-none transition-all"
+                          >
+                            <option value="">-- Choose Rider --</option>
+                            {riders.map(r => (
+                              <option key={r.id} value={r.id}>{r.full_name} (@{r.username})</option>
+                            ))}
+                          </select>
+                        </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Rider Name (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={riderName}
-                      onChange={(e) => setRiderName(e.target.value)}
-                      placeholder="e.g., John Doe"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
+                        {selectedRiderId && (
+                          <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-1">
+                            <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Assigned Name</label>
+                              <p className="text-sm font-bold text-gray-900">{riderName}</p>
+                            </div>
+                            <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Rider Phone</label>
+                              <p className="text-sm font-bold text-gray-900">{riderPhone}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Rider Phone
-                    </label>
-                    <input
-                      type="tel"
-                      value={riderPhone}
-                      onChange={(e) => setRiderPhone(e.target.value)}
-                      placeholder="e.g., 08012345678"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                    {newStatus === 'in_progress' && (
+                      <div className="space-y-4">
+                        {/* Divider */}
+                        <div className="border-t border-gray-100 my-4"></div>
+
+                        {/* Manual Overwrite Section */}
+                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                          <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Manual Rider Entry (Optional)</h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-xs font-bold text-gray-700 mb-1">
+                                Rider Name
+                              </label>
+                              <input
+                                type="text"
+                                value={riderName}
+                                onChange={(e) => setRiderName(e.target.value)}
+                                placeholder="e.g., John Doe"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-bold text-gray-700 mb-1">
+                                Rider Phone
+                              </label>
+                              <input
+                                type="tel"
+                                value={riderPhone}
+                                onChange={(e) => setRiderPhone(e.target.value)}
+                                placeholder="e.g., 08012345678"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                              />
+                            </div>
+                          </div>
+                          <p className="text-[10px] text-gray-400 mt-2 italic">Use this if the rider is not in the dropdown list above.</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div>

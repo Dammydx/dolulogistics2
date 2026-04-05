@@ -25,6 +25,10 @@ import AdminTemplates from './pages/admin/AdminTemplates';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminReports from './pages/admin/AdminReports';
 import AdminMap from './pages/admin/AdminMap';
+import AdminRiders from './pages/admin/AdminRiders';
+import PortalGateway from './pages/portal/PortalGateway';
+import RiderLogin from './pages/riders/RiderLogin';
+import RiderDashboard from './pages/riders/RiderDashboard';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
@@ -44,6 +48,8 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
+        <Route path="/portal" element={<PortalGateway />} />
+
         {/* Admin Routes */}
         <Route path="/admin" element={<AdminLogin />} />
         
@@ -56,8 +62,13 @@ function App() {
           <Route path="templates" element={<AdminTemplates />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="reports" element={<AdminReports />} />
+          <Route path="riders" element={<AdminRiders />} />
           <Route path="map" element={<AdminMap />} />
         </Route>
+
+        {/* Rider Portal Routes */}
+        <Route path="/riders" element={<RiderLogin />} />
+        <Route path="/riders/dashboard" element={<RiderDashboard />} />
       </Routes>
     </Router>
   );

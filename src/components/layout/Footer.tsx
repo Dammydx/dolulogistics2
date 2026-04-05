@@ -125,8 +125,8 @@ const Footer = () => {
           <p className="text-sm text-gray-400">
             © {year} Dolu Logistics • Coded by DevWave
           </p>
-          <Link to="/admin" className="text-sm text-gray-400 mt-3 md:mt-0 hover:text-gray-300">
-            *****
+          <Link to="/portal" className="text-sm text-gray-400 mt-3 md:mt-0 hover:text-gray-300 font-medium">
+            Staff Portal
           </Link>
         </div>
       </div>

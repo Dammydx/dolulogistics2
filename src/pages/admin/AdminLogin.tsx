@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Lock, Eye, EyeOff } from 'lucide-react';
+import { Lock, Eye, EyeOff, ArrowLeft, ShieldAlert, ChevronRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
+import doluLogo from '../../images/dolu-logo.png';
 
 const ADMIN_PASSWORD = 'Mailpassword1';
 
@@ -16,7 +16,7 @@ const AdminLogin = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     // Simulate network delay
     setTimeout(() => {
       if (password === ADMIN_PASSWORD) {
@@ -36,75 +36,85 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <motion.div 
-        className="max-w-md w-full bg-white rounded-lg shadow-lg overflow-hidden"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="bg-text p-8 flex items-center justify-center">
-          <Lock className="h-12 w-12 text-primary-500" />
-        </div>
-        
-        <div className="p-8">
-          <h1 className="text-2xl font-bold text-center mb-6">Admin Access</h1>
-          
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-400"
-                  required
-                />
-                <button 
-                  type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 focus:outline-none"
-                  onClick={togglePasswordVisibility}
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-            </div>
-            
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full px-6 py-3 bg-primary-500 text-white rounded-md font-medium hover:bg-primary-600 transition-colors flex items-center justify-center disabled:bg-gray-400"
-            >
-              {isLoading ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Logging in...
-                </span>
-              ) : (
-                'Login to Admin Panel'
-              )}
-            </button>
-          </form>
-          
-          <div className="mt-6 text-center">
-              <Link
-                to="/"
-                className="text-sm text-primary-500 hover:text-primary-600 transition-colors"
-              >
-                Back to Homepage
-              </Link>
+    <div className="h-screen bg-slate-900 flex items-center justify-center p-6 relative overflow-hidden">
+      {/* Background Orbs for Premium HQ feel */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-primary-600/10 rounded-full blur-[100px] -ml-40 -mt-40"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary-500/10 rounded-full blur-[100px] -mr-40 -mb-40"></div>
 
+      <div className="max-w-md w-full relative z-10">
+        {/* Main Card */}
+        <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden border border-white/20">
+          <div className="p-8 pb-10 text-center">
+            <Link to="/">
+              <img src={doluLogo} alt="Dolu Logistics" className="h-20 md:h-24 mx-auto mb-8 drop-shadow-md" />
+            </Link>
+            <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none mb-2">
+              Admin & Dispatch Login
+            </h1>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+              Central Operations Control
+            </p>
+          </div>
+
+          <div className="px-8 pb-12 pt-4">
+            <form onSubmit={handleSubmit} className="space-y-8">
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1 flex items-center gap-2">
+                  <ShieldAlert className="w-3.5 h-3.5 text-primary-500" /> Administrative Identity
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-slate-300" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Admin Password"
+                    className="w-full pl-16 pr-14 py-6 bg-slate-50 border-2 border-slate-100 rounded-3xl focus:ring-4 focus:ring-primary-500/10 focus:border-primary-400 text-lg font-black transition-all"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-6 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-primary-500 transition-colors"
+                    onClick={togglePasswordVisibility}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="h-6 w-6" /> : <Eye className="h-6 w-6" />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-6 bg-primary-600 text-white rounded-3xl font-black uppercase text-sm tracking-widest hover:bg-primary-700 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3 group disabled:bg-slate-200"
+              >
+                {isLoading ? (
+                  <span className="flex items-center gap-3">
+                    <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Verifying...
+                  </span>
+                ) : (
+                  <>
+                    Login
+                    <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </button>
+            </form>
           </div>
         </div>
-      </motion.div>
+
+        {/* Footer Link */}
+        <div className="mt-8 text-center">
+          <Link
+            to="/portal"
+            className="inline-flex items-center gap-2 text-xs font-black text-slate-500 hover:text-primary-400 uppercase tracking-widest transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Return to Portal
+          </Link>
+        </div>
+      </div>
     </div>
   );
 };

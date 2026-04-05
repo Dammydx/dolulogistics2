@@ -1,17 +1,19 @@
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { supabase } from '../../lib/supabase';
-import { Booking } from '../../types/database';
+import { Booking, Rider } from '../../types/database';
 import {
   Download,
   Calendar,
   CheckCircle,
   XCircle,
   Package,
-  DollarSign,
+  User,
 } from 'lucide-react';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+
+import NairaIcon from '../../components/icons/NairaIcon';
 
 const AdminReports = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -23,10 +25,26 @@ const AdminReports = () => {
   const [selectedMonth, setSelectedMonth] = useState<string>(
     `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`
   );
+  const [riders, setRiders] = useState<Rider[]>([]);
+  const [selectedRiderId, setSelectedRiderId] = useState<string>('all');
 
   useEffect(() => {
     fetchBookings();
+    fetchRiders();
   }, []);
+
+  const fetchRiders = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('riders')
+        .select('*')
+        .order('full_name', { ascending: true });
+      if (error) throw error;
+      setRiders(data || []);
+    } catch (err) {
+      console.error('Error fetching riders:', err);
+    }
+  };
 
   const fetchBookings = async () => {
     try {
@@ -54,12 +72,16 @@ const AdminReports = () => {
     
     return bookings.filter((booking) => {
       const date = new Date(booking.created_at);
-      return (
+      const matchesMonth = (
         date.getFullYear() === parseInt(year, 10) &&
         date.getMonth() + 1 === parseInt(month, 10)
       );
+      
+      const matchesRider = selectedRiderId === 'all' || booking.assigned_rider_id === selectedRiderId;
+      
+      return matchesMonth && matchesRider;
     });
-  }, [bookings, selectedMonth]);
+  }, [bookings, selectedMonth, selectedRiderId]);
 
   // Derive metrics
   const metrics = useMemo(() => {
@@ -121,7 +143,11 @@ const AdminReports = () => {
       const generatedAt = now.toLocaleDateString('en-NG', {
         day: 'numeric', month: 'long', year: 'numeric',
         hour: '2-digit', minute: '2-digit',
+        hour12: true,
       });
+
+      const selectedRider = riders.find(r => r.id === selectedRiderId);
+      const riderSuffix = selectedRider ? ` — ${selectedRider.full_name}` : '';
 
       // ===== COLORS =====
       const brandPrimary = '1E3A5F';  // Deep navy
@@ -181,7 +207,7 @@ const AdminReports = () => {
       // ===== ROW 2: Report Title =====
       sheet.mergeCells(rowNum, 1, rowNum, totalCols);
       const subtitleRow = sheet.getRow(rowNum);
-      subtitleRow.getCell(1).value = `${reportType} — ${monthLabel}`;
+      subtitleRow.getCell(1).value = `${reportType} — ${monthLabel}${riderSuffix}`;
       subtitleRow.getCell(1).font = { name: 'Calibri', size: 13, bold: true, color: { argb: brandAccent } };
       subtitleRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
       subtitleRow.height = 22;
@@ -388,8 +414,8 @@ const AdminReports = () => {
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const fileName = onlyDelivered 
-        ? `Dolu_Delivered_Report_${selectedMonth}.xlsx` 
-        : `Dolu_Report_${selectedMonth}.xlsx`;
+        ? `Dolu_Delivered_Report_${selectedMonth}${selectedRider ? '_' + selectedRider.username : ''}.xlsx` 
+        : `Dolu_Report_${selectedMonth}${selectedRider ? '_' + selectedRider.username : ''}.xlsx`;
       saveAs(blob, fileName);
       toast.success('Report downloaded successfully!');
     } catch (err) {
@@ -430,8 +456,29 @@ const AdminReports = () => {
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="border-none focus:ring-0 text-sm font-medium text-gray-700 bg-transparent min-w-[150px] cursor-pointer"
+            className="border-none focus:ring-0 text-sm font-bold text-gray-700 bg-transparent min-w-[150px] cursor-pointer"
           />
+        </div>
+
+        <div className="flex items-center gap-3 bg-white p-2 rounded-lg border border-gray-200 shadow-sm transition-all hover:border-primary-300">
+          <User className="h-5 w-5 text-gray-500 ml-2" />
+          <select
+            value={selectedRiderId}
+            onChange={(e) => setSelectedRiderId(e.target.value)}
+            className="border-none focus:ring-0 text-sm font-bold text-gray-700 bg-transparent min-w-[180px] cursor-pointer appearance-none pr-8"
+          >
+            <option value="all">Company Report (All)</option>
+            <optgroup label="Active Team">
+              {riders.filter(r => r.status === 'active').map(r => (
+                <option key={r.id} value={r.id}>{r.full_name}</option>
+              ))}
+            </optgroup>
+            <optgroup label="Archived">
+              {riders.filter(r => r.status === 'archived').map(r => (
+                <option key={r.id} value={r.id}>{r.full_name} (Retired)</option>
+              ))}
+            </optgroup>
+          </select>
         </div>
       </div>
 
@@ -457,7 +504,7 @@ const AdminReports = () => {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Delivered</p>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-bold text-gray-100">
               {metrics.delivered}
             </p>
           </div>
@@ -477,7 +524,7 @@ const AdminReports = () => {
         {/* Revenue */}
         <div className="bg-white rounded-lg p-5 border border-gray-200 shadow-sm flex items-center">
           <div className="bg-yellow-100 p-3 rounded-xl mr-4">
-            <DollarSign className="h-6 w-6 text-yellow-600" />
+            <NairaIcon className="h-6 w-6 text-yellow-600" />
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Revenue</p>
@@ -548,7 +595,14 @@ const AdminReports = () => {
                 {filteredBookings.map((booking) => (
                   <tr key={booking.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {new Date(booking.created_at).toLocaleDateString('en-NG')}
+                      {new Date(booking.created_at).toLocaleDateString('en-NG', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true,
+                      })}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <code className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">

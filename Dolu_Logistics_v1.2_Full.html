@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dolu Logistics - Standard Operational Guide (v1.2)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0B3C7A;
+      --accent: #8BCF1A;
+      --bg: #F8FAFC;
+      --card: #FFFFFF;
+      --text-main: #1E293B;
+      --border: #E2E8F0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      color: var(--text-main);
+      background-color: var(--bg);
+      line-height: 1.6;
+      padding: 40px 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 30px;
+      background: var(--primary);
+      border-radius: 30px;
+      color: white;
+    }
+
+    h1 { font-family: 'Outfit', sans-serif; margin: 0; font-size: 2.5rem; text-transform: uppercase; }
+    h2 { font-family: 'Outfit', sans-serif; color: var(--primary); border-bottom: 3px solid var(--accent); width: fit-content; padding-bottom: 5px; margin-top: 40px; }
+    
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 800;
+      font-size: 0.7em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .admin { background: #FEF3C7; color: #92400E; }
+    .rider { background: #DCFCE7; color: #166534; }
+    .customer { background: #DBEAFE; color: #1E40AF; }
+
+    @media print {
+      body { font-size: 11pt; padding: 0; }
+      .header { padding: 20px; border-radius: 15px; }
+      @page { margin: 1.5cm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <p style="font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 5px;">Standard Operational Guide</p>
+    <h1>Dolu Logistics v1.2</h1>
+  </div>
+
+  <p>This is the standard day-to-day guide for using the Dolu Logistics v1.2 platform. For a deeper technical and system-wide breakdown, please refer to the <strong>Master System Overview</strong> document.</p>
+
+  <h2>1. Customer Workflow</h2>
+  <div class="card">
+    <div class="tag customer">Service Experience</div>
+    <ul>
+      <li><strong>Step 1: Request Pickup:</strong> Enter Pickup and Drop-off locations. The system instantly draws the route and calculates the price based on PH Zones.</li>
+      <li><strong>Step 2: Booking Details:</strong> Provide the names and phone numbers for both the Sender and the Receiver. Ensure addresses are accurate for the rider.</li>
+      <li><strong>Step 3: Payment & Confirmation:</strong> Follow the on-screen payment instructions. Once completed, a unique <strong>Tracking ID</strong> is generated.</li>
+      <li><strong>Step 4: Tracking:</strong> Use the Tracking ID to monitor the parcel's progress on the interactive map and see real-time status updates.</li>
+    </ul>
+  </div>
+
+  <h2>2. Admin Workflow</h2>
+  <div class="card">
+    <div class="tag admin">Operations</div>
+    <ul>
+      <li><strong>Confirming Orders:</strong> Once a customer pays, the <strong>Bell Notification</strong> will ring. Review the order and tap "Confirm."</li>
+      <li><strong>Dispatching:</strong> Go to the Dispatch Desk, select an available rider, and set the status to <strong>"In Progress."</strong></li>
+      <li><strong>Reporting:</strong> Use the "Export to Excel" tool in the Bookings tab for your daily revenue audit.</li>
+    </ul>
+  </div>
+
+  <h2>3. Rider Workflow</h2>
+  <div class="card">
+    <div class="tag rider">Field Operations</div>
+    <ul>
+      <li><strong>Accepting Jobs:</strong> Check your dashboard for the <strong>NEW LOAD</strong> badge. Tapping a job shows you the full pickup/dropoff route.</li>
+      <li><strong>Contacting:</strong> Use the one-tap WhatsApp or Call buttons to coordinate with the sender or receiver.</li>
+      <li><strong>Confirming Delivery:</strong> Use the <strong>"Slide to Deliver"</strong> handle at the destination to safely close the job.</li>
+    </ul>
+  </div>
+
+  <h2>4. Standard Operational Workflow</h2>
+  <div class="card">
+    <p><em>Example Logistics Cycle: Urban to Regional Delivery</em></p>
+    <ol>
+      <li><strong>Initial Booking:</strong> A customer creates a request from <strong>Old GRA</strong> to <strong>Airport Road</strong>. High-Zone pricing is applied automatically.</li>
+      <li><strong>Confirmation:</strong> The Admin uses the Notification Center to confirm the booking status upon verification of payment.</li>
+      <li><strong>Assignment:</strong> The Dispatcher assigns a rider via the Dispatch Desk. The status is moved to <strong>In Progress</strong>.</li>
+      <li><strong>Transit Phase:</strong> The assigned rider receives an automated notification. They utilize the integrated contact tools to notify the sender and receiver.</li>
+      <li><strong>Confirmation of Handover:</strong> Upon arrival, the rider utilizes the <strong>Tactile Swipe Handle</strong> to confirm physical delivery and handover.</li>
+      <li><strong>Completion:</strong> The system automatically records the revenue and updates the public tracking status to <strong>Delivered</strong>.</li>
+    </ol>
+  </div>
+
+  <div style="text-align: center; margin-top: 60px; opacity: 0.5; font-size: 0.8em; font-weight: 800; text-transform: uppercase;">
+    Dolu Logistics Framework v1.2 • Standard Edition
+  </div>
+</body>
+</html>

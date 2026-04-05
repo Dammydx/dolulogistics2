@@ -3,154 +3,332 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dolu Logistics - System Overview</title>
+  <title>Dolu Logistics - Master System Overview (v1.2 Complete)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --primary: #0B3C7A;
+      --accent: #8BCF1A;
+      --accent-dark: #6BA312;
+      --bg: #F8FAFC;
+      --card: #FFFFFF;
+      --text-main: #1E293B;
+      --text-muted: #64748B;
+      --border: #E2E8F0;
+    }
+
     body {
       font-family: 'Inter', -apple-system, sans-serif;
-      color: #0F172A;
-      background-color: #F7FAFF;
-      line-height: 1.65;
-      padding: 50px;
+      color: var(--text-main);
+      background-color: var(--bg);
+      line-height: 1.8;
+      padding: 60px 20px;
+      margin: 0;
+      max-width: 1100px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .header-container {
+      text-align: center;
+      margin-bottom: 80px;
+      padding: 60px 40px;
+      background: linear-gradient(135deg, var(--primary) 0%, #1558B0 100%);
+      border-radius: 50px;
+      color: white;
+      box-shadow: 0 30px 60px rgba(11, 60, 122, 0.2);
     }
 
     h1 {
-      color: #0B3C7A;
-      font-size: 2.8em;
-      border-bottom: 5px solid #8BCF1A;
-      padding-bottom: 20px;
-      margin-bottom: 35px;
-      letter-spacing: -0.02em;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 900;
+      font-size: 3.5rem;
+      margin: 0 0 15px 0;
+      text-transform: uppercase;
+      letter-spacing: -0.05em;
+    }
+
+    .version-tag {
+      background: var(--accent);
+      color: var(--primary);
+      padding: 8px 25px;
+      border-radius: 100px;
+      font-weight: 900;
+      font-size: 0.9em;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      display: inline-block;
+      margin-bottom: 20px;
     }
 
     h2 {
-      color: #1558B0;
-      font-size: 2em;
-      margin-top: 50px;
-      border-bottom: 2px solid #E2E8F0;
-      padding-bottom: 12px;
-      margin-bottom: 20px;
+      font-family: 'Outfit', sans-serif;
+      color: var(--primary);
+      font-size: 2.5rem;
+      margin-top: 80px;
+      border-bottom: 6px solid var(--accent);
+      width: fit-content;
+      padding-bottom: 10px;
+      margin-bottom: 40px;
+      letter-spacing: -0.03em;
     }
 
     h3 {
-      color: #0F4C9E;
-      font-size: 1.5em;
-      margin-top: 30px;
-      margin-bottom: 15px;
+      font-family: 'Outfit', sans-serif;
+      color: #1558B0;
+      font-size: 1.8rem;
+      margin-top: 50px;
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    h3::before {
+      content: "";
+      width: 10px;
+      height: 30px;
+      background: var(--accent);
+      border-radius: 5px;
     }
 
     p {
+      font-size: 1.25rem;
+      margin-bottom: 30px;
       color: #334155;
-      font-size: 1.1em;
-      margin-bottom: 20px;
     }
 
-    ul, ol {
-      margin-bottom: 25px;
-      color: #334155;
-      padding-left: 25px;
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 45px;
+      border-radius: 40px;
+      box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.05);
+      margin-bottom: 45px;
+    }
+
+    .grid-layout {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin: 40px 0;
     }
 
     li {
-      margin-bottom: 12px;
-      font-size: 1.1em;
+      margin-bottom: 20px;
+      font-size: 1.2rem;
     }
 
-    strong {
-      color: #082F61;
+    .zone-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 40px 0;
+      background: white;
+      border-radius: 30px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .zone-table th {
+      background: var(--primary);
+      color: white;
+      padding: 25px;
+      text-align: left;
+      font-family: 'Outfit', sans-serif;
+      text-transform: uppercase;
+    }
+
+    .zone-table td {
+      padding: 25px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.8em;
       font-weight: 800;
+      text-transform: uppercase;
+      margin-right: 10px;
     }
 
-    li::marker {
-      color: #1558B0;
-      font-weight: bold;
-    }
-
-    hr {
-      border: 0;
-      height: 3px;
-      background-color: #BFDBFE;
-      margin: 50px 0;
-    }
-
-    @page {
-      margin: 2.5cm;
+    .scenario-box {
+      background: #F0FDF4;
+      border: 3px dashed #22C55E;
+      padding: 50px;
+      border-radius: 50px;
+      margin: 80px 0;
     }
 
     @media print {
-      body {
-        background-color: white;
-        padding: 0;
-      }
+      body { background-color: white; padding: 0; font-size: 11.5pt; line-height: 1.5; }
+      .header-container { padding: 40px !important; border: 2px solid var(--primary); }
+      h1 { font-size: 2.8rem !important; }
+      h2 { font-size: 2rem !important; margin-top: 40px !important; }
+      .card { page-break-inside: avoid; }
+      .zone-table { page-break-inside: avoid; }
+      @page { margin: 1.5cm; }
     }
   </style>
 </head>
 <body>
-  <h1>Dolu Logistics - Executive System Overview (v1.1)</h1>
-  <p>This report provides an easy-to-understand breakdown of the Dolu Logistics platform. It outlines how our technology simplifies daily business operations, enhances the customer experience, and provides the administrative team with the tools needed to manage high-volume logistics with precision and financial security.</p>
+  <div class="header-container">
+    <div class="version-tag">Production Infrastructure v1.2</div>
+    <h1>Dolu Logistics</h1>
+    <p style="color: rgba(255,255,255,0.9); margin: 0; font-size: 1.5em; font-weight: 700;">
+      Complete System Infrastructure & Operations Master Report
+    </p>
+  </div>
+
+  <p>This is the <strong>Full Master Overview</strong> of the Dolu Logistics framework (v1.2). This report provides a complete, lengthy, and exhaustive breakdown of the technical, operational, and financial layers of the business. It is designed to be the ultimate reference for management and stakeholders.</p>
+
+  <div class="card">
+    <h3>The v1.2 Framework</h3>
+    <p>Version 1.2 is our most comprehensive release, moving beyond simple tracking into a fully-integrated <strong>Logistics Command Center</strong>. The system now prioritizes <strong>Real-Time Data Integrity</strong>, <strong>Financial Audit Logs</strong>, and <strong>Field Personnel Safety</strong> through a synchronized web-engine architecture.</p>
+  </div>
+
   <hr>
-  <h2>1. Business Infrastructure & Tech Foundation</h2>
-  <p>The platform is designed to be fast, reliable, and accessible from any device. We have focused on creating a foundation that supports growth without requiring complex manual management.</p>
-  <ul>
-    <li><strong>Fast-Response Technology:</strong> The system is built for speed, ensuring customers and staff experience zero delays when calculating prices or updating delivery statuses.</li>
-    <li><strong>Any-Device Access (Home Screen):</strong> The platform can be "installed" on any phone or laptop like a regular app. This ensures the team and customers have instant access without going through an app store.</li>
-    <li><strong>Animated Visual Engine:</strong> We use advanced mapping tools to provide "pulsing" visual cues. This isn't just for looks—it gives customers immediate confidence that their order is being tracked in real-time.</li>
-    <li><strong>Secure Central Data Hub:</strong> All information is stored in a permanent, industrial-grade data vault. This ensures our tracking numbers are always unique and our historical records are never lost.</li>
-  </ul>
+
+  <h2>1. Technology Stack & Logic Deep-Dive</h2>
+  <p>The system is built for massive scalability in the Port Harcourt logistics market. We use a high-performance cloud stack to ensure zero downtime and sub-second data updates.</p>
+
+  <div class="grid-layout">
+    <div class="card" style="margin-bottom: 0;">
+      <p><strong>Database Layer:</strong> Powered by PostgreSQL with Row-Level Security. This ensures that every booking is protected by a hardware-level firewall, preventing unauthorized access to customer data.</p>
+    </div>
+    <div class="card" style="margin-bottom: 0;">
+      <p><strong>Heartbeat Engine:</strong> The Rider and Admin portals communicate through a 60-second silent poll. This ensures the "Active Load" is never stale, even if the internet flickers.</p>
+    </div>
+  </div>
+
   <hr>
-  <h2>2. The Customer Journey (Simplified Success)</h2>
-  <p>Our philosophy is to make booking a delivery as easy as sending a message. We use visual tools to remove guesswork for the customer.</p>
-  
-  <h3>A. Instant Pricing & Visual Confirmation</h3>
-  <ul>
-    <li><strong>See Your Delivery Route:</strong> When a customer picks a location, the map instantly draws their delivery path. This visual "A-to-B" confirmation reduces errors and builds trust.</li>
-    <li><strong>Intuitive Map Controls:</strong> The map is designed to allow customers to scroll the page freely. It only moves when intended, preventing the "trapped" feeling common on other websites.</li>
-  </ul>
 
-  <h3>B. Smart Booking & Guaranteed Profitability</h3>
-  <ol>
-    <li><strong>Simple Order Entry:</strong> Customers provide their details in a clean, guided form that prevents missing information.</li>
-    <li><strong>Automatic Price Calculation:</strong> The system handles all the math. It uses a "Highest-Zone" rule to ensure that if a trip crosses into a more expensive area, the business always collects the correct, most profitable rate automatically.</li>
-    <li><strong>Expansion Ready (Zone F):</strong> We have already prepared the system for long-distance deliveries (₦6,000 base). Areas like <em>Oyigbo</em> and <em>Igbo-Etche</em> are handled instantly without any manual setup.</li>
-    <li><strong>Seamless Payment:</strong> After booking, the customer receives a professional summary and clear payment instructions, making the final step effortless.</li>
-  </ol>
+  <h2>2. Port Harcourt Service Zone & Pricing Utility</h2>
+  <p>Our pricing engine is the core of the business’s profitability. It intelligently applies the Highest-Zone Rule to every delivery route.</p>
 
-  <h3>C. Premium Real-Time Tracking</h3>
-  <ul>
-    <li><strong>Live Location Pins:</strong> Customers can track their parcels on a high-end map featuring "pulsing" markers. It feels alive and reassures the customer that their package is moving.</li>
-    <li><strong>Automatic Labels:</strong> Every pin is clearly labeled with the area name (e.g., Rumuokoro or Borikiri), making it easy to understand where the package is at a glance.</li>
-    <li><strong>Miniature Route Card:</strong> A small info card shows the origin and destination details. It shrinks on mobile phones to stay out of the way while still providing all necessary info.</li>
-    <li><strong>Status Bar Tracking:</strong> A clear, color-coded status bar at the bottom summarizes exactly which stage the delivery is in (e.g., "In Progress").</li>
-  </ul>
+    <div style="margin-top: 20px;">
+      <span class="tech-badge">PostgreSQL v15+</span>
+      <span class="tech-badge">React 18</span>
+      <span class="tech-badge">Framer Motion</span>
+      <span class="tech-badge">Lucide Dynamic Icons</span>
+      <span class="tech-badge">localStorage Persistence</span>
+    </div>
+
+  <div class="card">
+    <table class="zone-table">
+      <thead>
+        <tr>
+          <th>Zone Rank</th>
+          <th>Coverage Areas</th>
+          <th>Strategic Impact</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Zone A</strong></td>
+          <td>Old GRA, Town, D-Line, New GRA</td>
+          <td>Baseline Urban Logistics</td>
+        </tr>
+        <tr>
+          <td><strong>Zone B</strong></td>
+          <td>Rumuola, Artillery, Woji, Rumuigbo</td>
+          <td>City Center Distribution</td>
+        </tr>
+        <tr>
+          <td><strong>Zone C</strong></td>
+          <td>Choba, Uniport, Rumuokoro, Eliozu</td>
+          <td>Educational & Transit Hubs</td>
+        </tr>
+        <tr>
+          <td><strong>Zone D</strong></td>
+          <td>Trans-Amadi, Slaughter, Odili Road</td>
+          <td>Industrial Corridor Access</td>
+        </tr>
+        <tr>
+          <td><strong>Zone E</strong></td>
+          <td>Eleme, Onne, Eneka, Rukpokwu</td>
+          <td>Strategic Development Zones</td>
+        </tr>
+        <tr>
+          <td><strong>Zone F</strong></td>
+          <td>Oyigbo, Igbo-Etche, Airport Road, Omagwa</td>
+          <td>Maximum Distance Premium Tier</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><em>Revenue Protection Alert:</em> The system automatically forces the highest zone rate if a pickup and delivery cross multiple zone boundaries.</p>
+  </div>
+
   <hr>
-  <h2>3. Administrative Strategy (The Dispatch Center)</h2>
-  <p>The Admin side is the "brain" of the business, designed to help dispatchers manage hundreds of orders with minimal stress.</p>
 
-  <h3>A. Efficient Dispatching & Rider Assignment</h3>
-  <ul>
-    <li><strong>The Master Dashboard:</strong> A single "command center" where the team can see every pending and delivered order in one clean list.</li>
-    <li><strong>WhatsApp Automation:</strong> With one click, the admin can send a perfectly formatted summary to the rider or a tracking update to the customer. This saves hours of typing every week.</li>
-    <li><strong>Visual Area Management:</strong> admins see a map of all operating zones. Each area "pulses" on the map, making it easy to coordinate groups of riders.</li>
-  </ul>
+  <h2>3. Admin Command Protocols (Master Oversight)</h2>
+  <p>The Admin interface provides the Dispatcher with a centralized hub for every active parcel in the fleet.</p>
 
-  <h3>B. Safeguarding Company Data (Soft-Delete)</h3>
-  <p>We have implemented a specialized protection system to ensure our financial history is never accidentally broken.</p>
-  <ul>
-    <li><strong>Area Deactivation:</strong> Instead of "deleting" a location (which would erase past booking data), the admin can simply turn it off. This keeps the booking list clean for new customers while keeping the old records safe for the Chairman's reports.</li>
-    <li><strong>Instant Price Updates:</strong> The admin can change the base price of an entire zone (e.g., Zone F) with one click, and every new quote will update instantly without affecting past bookings.</li>
-  </ul>
+  <div class="card">
+    <ul>
+      <li><strong>Dispatch Desk Precision:</strong> When a job is confirmed, the admin must explicitly assign a rider. The system locks the "Rider" field after dispatch to prevent "mid-route rider swapping" errors.</li>
+      <li><strong>Notification Bell:</strong> A visual alarm rings whenever a new "Confirmed" payment is detected. This ensures zero wait-time for the customer.</li>
+      <li><strong>Revenue & Financials:</strong> The Export feature generates a full audit-ready file. Every entry includes the Tracking ID, Rider Name, and Final Price (v1.2 Standard).</li>
+      <li><strong>Fleet Lockdown:</strong> Use the "Archive" tool to instantly disable rider access during off-hours or maintenance periods.</li>
+    </ul>
+  </div>
 
-  <h3>C. Financial Reporting for Management</h3>
-  <ul>
-    <li><strong>Accurate Revenue Tracking:</strong> The system automatically calculates total revenue only from "Delivered" packages, giving the Chairman a 100% accurate financial picture.</li>
-    <li><strong>One-Click Excel Reports:</strong> The team can generate a professional Excel spreadsheet at the end of every month. This report includes every Tracking ID, customer info, and financial total, ready for HR or Accounting.</li>
-  </ul>
   <hr>
-  <h2>4. Core Business Values & Advantages</h2>
-  <ol>
-    <li><strong>Total Financial History:</strong> Our data protection ensures you can look back years from now and see every transaction perfectly preserved.</li>
-    <li><strong>Premium Market Position:</strong> Our high-end animated maps and tracking tools place Dolu Logistics above competitors, attracting higher-value customers.</li>
-    <li><strong>Massive Time Savings:</strong> Automation of tracking numbers, WhatsApp messages, and pricing allows your team to handle 5x the volume with the same workforce.</li>
-    <li><strong>Error-Free Pricing:</strong> The system guarantees the business always charges the correct rate based on your zone strategy, protecting your profit on every single trip.</li>
-  </ol>
+
+  <h2>4. Rider Field Operations (Elite Mobile)</h2>
+  <p>The Rider Portal is a high-contrast, tactile interface built for officers moving in fast traffic.</p>
+
+  <div class="card">
+    <ul>
+      <li><strong>Tactile Security Handle:</strong> Riders cannot "mistakenly" click a job as delivered. They must physically <strong>Slide the Lever</strong> across the screen. This confirms a intentional handover.</li>
+      <li><strong>Persistent Session:</strong> The system remembers the rider. If their phone battery dies mid-delivery, they just turn it back on and the dashboard is exactly where they left it.</li>
+      <li><strong>Smart Contact Triggers:</strong> Riders can WhatsApp the Sender for Pickup or the Receiver for Delivery with one tap. The messages are pre-typed for speed and professionalism.</li>
+    </ul>
+  </div>
+
+  <hr>
+
+  <h2>5. Interactive Parcel Tracking & UX</h2>
+  <p>We provide customers with a <strong>Status-Aware Map</strong>. This build of the system focuses on transparency and visual confirmation.</p>
+
+  <div class="card">
+    <ul>
+      <li><strong>Animated Route Mapping:</strong> The system draws the exact intended path on the customer’s map, providing <strong>Visual Proof</strong> of the logistics plan.</li>
+      <li><strong>Pulse Visualization:</strong> The tracking ID pulses to show it is active, and the status bar changes color as the rider swipes their progress.</li>
+    </ul>
+  </div>
+
+  <hr>
+
+  <div class="scenario-box">
+    <h3>Standard Operational Workflow</h3>
+    <p><em>Example Logistics Cycle: Urban to Regional Zone Delivery</em></p>
+    <ol>
+      <li><strong>Request Phase:</strong> A customer request is initialized from <strong>Old GRA</strong> to <strong>Airport Road</strong>. High-Zone pricing is applied automatically for the outer-zone destination.</li>
+      <li><strong>Operational Confirmation:</strong> The Administrative team utilizes the Notification Center to verify payment and confirm the booking status.</li>
+      <li><strong>Fleet Assignment:</strong> The Dispatcher selects an available rider via the Dispatch Desk. The status is advanced to <strong>In Progress</strong>.</li>
+      <li><strong>Field Notification:</strong> The assigned rider receives an automated notification via the Heartbeat system. They utilize the integrated contact tools for Pickup/Delivery coordination.</li>
+      <li><strong>Handover Confirmation:</strong> Upon arrival, the rider utilizes the <strong>Tactile Swipe Handle</strong> to confirm physical delivery and handover.</li>
+      <li><strong>Revenue Finalization:</strong> The digital ledger updates automatically. The customer status is pushed to <strong>Delivered</strong>. 🏁</li>
+    </ol>
+  </div>
+
+  <hr>
+
+  <h2>6. Technological Roadmap (v1.x Series)</h2>
+  <p>While v1.2 is our current gold standard, our infrastructure is ready for the following future enhancements:</p>
+  <ul>
+    <li>Digital In-Field Invoicing & SMS Gateways.</li>
+    <li>Proof of Delivery (POD) Image Uploads.</li>
+    <li>Customer Rating & Performance feedback for Riders.</li>
+  </ul>
+
+  <div style="text-align: center; color: var(--text-muted); margin-top: 100px; padding-bottom: 60px;">
+    <p><strong>Dolu Logistics Infrastructure v1.2 Complete</strong></p>
+    <p style="font-size: 0.8em; opacity: 0.5; text-transform: uppercase;">Engineered for Logistics Excellence • April 2026</p>
+  </div>
 </body>
 </html>

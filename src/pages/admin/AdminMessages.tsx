@@ -279,7 +279,14 @@ const AdminMessages = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {new Date(message.created_at).toLocaleDateString()}
+                      {new Date(message.created_at).toLocaleDateString('en-NG', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true,
+                      })}
                     </td>
                     <td className="px-6 py-4">
                       <button
@@ -324,7 +331,14 @@ const AdminMessages = () => {
                   <p className="text-xs text-gray-600 mb-3">{message.message.substring(0, 100)}...</p>
                   <div className="flex items-center justify-between">
                     <p className="text-xs text-gray-500">
-                      {new Date(message.created_at).toLocaleDateString()}
+                      {new Date(message.created_at).toLocaleDateString('en-NG', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true,
+                      })}
                     </p>
                     <button
                       onClick={() => handleViewDetails(message)}
@@ -428,7 +442,14 @@ const AdminMessages = () => {
                   </p>
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  Received: {new Date(selectedMessage.created_at).toLocaleString()}
+                  Received: {new Date(selectedMessage.created_at).toLocaleString('en-NG', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true,
+                  })}
                 </p>
               </div>
 

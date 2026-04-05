@@ -7,15 +7,17 @@ import {
   Menu,
   X,
   LogOut,
-  DollarSign,
   FileText,
   Settings as SettingsIcon,
   Package,
   ClipboardList,
   MapPin,
+  Users,
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+
+import NairaIcon from '../icons/NairaIcon';
 
 const AdminLayout = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -61,13 +63,18 @@ const AdminLayout = () => {
       label: 'Zone Map',
     },
     {
+      to: '/admin/riders',
+      icon: Users,
+      label: 'Fleet Management',
+    },
+    {
       to: '/admin/messages',
       icon: MessageCircle,
       label: 'Contact Messages',
     },
     {
       to: '/admin/pricing',
-      icon: DollarSign,
+      icon: (props: any) => <NairaIcon {...props} size={20} className={props.className + " font-bold"} />,
       label: 'Pricing',
     },
     {
